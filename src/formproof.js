@@ -7,6 +7,7 @@ let keepVideo = false;
 let tfaTwilio = false;
 let blackList = false;
 let phoneInputId = ''
+let privacityInputId = ''
 let callback = ''
 let baseApi = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
@@ -21,6 +22,7 @@ if (scriptElement) {
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
+    privacityInputId = urlParams.get("privacityId");
     saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
@@ -70,9 +72,11 @@ addEventListener("submit", async (event) => {
 });
 
 async function formproofSaveRecordWithOnsubmitEvent(data) {
-    savingLoading = true
-    console.log('formproofSaveRecordWithOnsubmitEvent')
+    savingLoading = true;
+    console.log('formproofSaveRecordWithOnsubmitEvent');
+    const termsText = document.getElementById(privacityInputId)?.innerText || '';
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
+    jsonObject['terms'] = termsText;
     const userAgent = window.navigator.userAgent;
     const responseIp = await fetch("https://api.ipify.org/?format=json");
     const responseAsJson = await responseIp.json();
