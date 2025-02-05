@@ -1,6 +1,6 @@
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
-let clientToken = ''
+let token = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
@@ -9,14 +9,16 @@ let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
 let callback = ''
-let baseApi = 'https://splendid-binary-uynxj.ampt.app/api'
+let codeReg = ''
+let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
-    clientToken = urlParams.get("clientToken");
+    token = urlParams.get("token");
+    codeReg = urlParams.get("coReg");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback")
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
@@ -39,7 +41,7 @@ const validateTfCodeApi = `${baseApi}/tfa/validate`;
 const validateBlackListApi = `${baseApi}/blacklist`;
 
 if (automaticRecord) {
-    console.log('formproof start..')
+    console.log('formTrace start..')
     formProoftStartRecord()
 }
 
@@ -87,7 +89,8 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
-        clientToken: clientToken ? clientToken : ''
+        token: token ? token : '',
+        codeReg: codeReg ? codeReg.toString() : ''
     };
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
@@ -116,7 +119,8 @@ async function formproofSaveRecord(data = {}) {
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
-        clientToken: clientToken ? clientToken : ''
+        token: token ? token : '',
+        codeReg: codeReg ? codeReg.toString() : ''
     };
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
