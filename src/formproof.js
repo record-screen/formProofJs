@@ -86,9 +86,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     const responseAsJson = await responseIp.json();
     const clientIp = responseAsJson?.ip;
     const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
-
-    console.log("Recording ID before submitting:", recordingId);
-
     const dataSubmit = {
         form: jsonObject,
         events: JSON.stringify(eventsToSubmit),
@@ -105,16 +102,12 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseAsJson2 = await response.json();
         const recordingId = responseAsJson2.recordingId;
         const hiddenFormTraceInput = document.getElementById(hiddenFormTrace);
-        console.log("Valor del hiddenInput:", hiddenFormTraceInput.value);
-
         if (hiddenFormTraceInput && hiddenFormTraceInput.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('recordingId', recordingId);
             redirectUrl.searchParams.set('token', token);
             console.log("Redirigiendo a:", redirectUrl.toString());
             window.location.href = redirectUrl.toString();
-        } else {
-            console.error("El input con ID 'hiddenFormTrace' no existe o no tiene un valor.");
         }
 
         if (callback) {
