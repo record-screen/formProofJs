@@ -8089,6 +8089,7 @@ let tfaTwilio = false;
 let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
+let hiddenFormTrace = 'hiddenFormTrace'
 let callback = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
@@ -8162,7 +8163,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     const responseIp = await fetch("https://api.ipify.org/?format=json");
     const responseAsJson = await responseIp.json();
     const clientIp = responseAsJson?.ip;
-    const eventsToSubmit = !keepVideo ? {[pathNamePage]: events} : JSON.parse(localStorage.getItem(storageRecord));
+    const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
     const dataSubmit = {
         form: jsonObject,
         events: JSON.stringify(eventsToSubmit),
@@ -8170,18 +8171,27 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         token: token ? token : ''
     };
-    const response = await saveRecordings(dataSubmit)
+    const response = await saveRecordings(dataSubmit);
     savingLoading = false;
     record = false;
     if (keepVideo) {
         localStorage.removeItem(storageRecord);
     }
     const responseAsJson2 = await response.json();
+    const recordingId = responseAsJson2.recordingId;
+    const hiddenFormTraceInput = document.getElementById(hiddenFormTrace);
+
+    if (hiddenFormTraceInput && hiddenFormTraceInput.value) {
+        const redirectUrl = new URL(hiddenFormTraceInput.value);
+        redirectUrl.searchParams.set('recordingId', recordingId);
+        window.location.href = redirectUrl.toString();
+    } else {
+        console.error("El input con ID 'hiddenFormTrace' no existe o no tiene un valor.");
+    }
     if (callback) {
-        test({form: jsonObject, formProofResponse: responseAsJson2})
+        test({ form: jsonObject, formProofResponse: responseAsJson2 });
     }
     return responseAsJson2;
-
 }
 
 async function formproofSaveRecord(data = {}) {
@@ -8207,6 +8217,9 @@ async function formproofSaveRecord(data = {}) {
     }
     return await response.json();
 }
+
+window.formproofSaveRecord = formproofSaveRecord;
+
 
 async function tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event) {
     const phoneInput = document.getElementById(phoneInputId);
