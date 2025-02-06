@@ -8095,6 +8095,9 @@ let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
+const urlParamsBrowser = new URLSearchParams(window.location.search);
+const recordingIdFromBrowser = urlParamsBrowser.get("recordingId");
+
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
@@ -8102,7 +8105,7 @@ if (scriptElement) {
     token = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
-    recordingId = urlParams.get("recordingId") || new URLSearchParams(window.location.search).get("recordingId");
+    recordingId = recordingIdFromBrowser;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
