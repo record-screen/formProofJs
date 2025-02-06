@@ -5,5 +5,5 @@ async function saveRecording(saveOnSubmit, event) {
         const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey)
     }
-    event.target.submit();
+    // event.target.submit();
 }

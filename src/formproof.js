@@ -10,6 +10,7 @@ let phoneInputId = ''
 let privacityInputId = ''
 let hiddenFormTrace = 'hiddenFormTrace'
 let callback = ''
+let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
@@ -19,7 +20,8 @@ if (scriptElement) {
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     token = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
-    callback = urlParams.get("callback")
+    callback = urlParams.get("callback");
+    recordingId = urlParams.get("recordingId")
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -33,6 +35,7 @@ const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
 const formProofApiSave = `${baseApi}/recordings`;
+const formTraceApiNewEvents = `${baseApi}/recordings/recording/newStorage`;
 let savingLoading = false;
 let record = true;
 const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
@@ -83,6 +86,9 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     const responseAsJson = await responseIp.json();
     const clientIp = responseAsJson?.ip;
     const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
+
+    console.log("Recording ID before submitting:", recordingId);
+
     const dataSubmit = {
         form: jsonObject,
         events: JSON.stringify(eventsToSubmit),
@@ -90,27 +96,40 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         token: token ? token : ''
     };
-    const response = await saveRecordings(dataSubmit);
-    savingLoading = false;
-    record = false;
-    if (keepVideo) {
-        localStorage.removeItem(storageRecord);
+    if (recordingId) {
+        dataSubmit.recordingId = recordingId;
     }
-    const responseAsJson2 = await response.json();
-    const recordingId = responseAsJson2.recordingId;
-    const hiddenFormTraceInput = document.getElementById(hiddenFormTrace);
 
-    if (hiddenFormTraceInput && hiddenFormTraceInput.value) {
-        const redirectUrl = new URL(hiddenFormTraceInput.value);
-        redirectUrl.searchParams.set('recordingId', recordingId);
-        window.location.href = redirectUrl.toString();
-    } else {
-        console.error("El input con ID 'hiddenFormTrace' no existe o no tiene un valor.");
+    try {
+        const response = await saveRecordings(dataSubmit);
+        const responseAsJson2 = await response.json();
+        const recordingId = responseAsJson2.recordingId;
+        const hiddenFormTraceInput = document.getElementById(hiddenFormTrace);
+        console.log("Valor del hiddenInput:", hiddenFormTraceInput.value);
+
+        if (hiddenFormTraceInput && hiddenFormTraceInput.value) {
+            const redirectUrl = new URL(hiddenFormTraceInput.value);
+            redirectUrl.searchParams.set('recordingId', recordingId);
+            redirectUrl.searchParams.set('token', token);
+            console.log("Redirigiendo a:", redirectUrl.toString());
+            window.location.href = redirectUrl.toString();
+        } else {
+            console.error("El input con ID 'hiddenFormTrace' no existe o no tiene un valor.");
+        }
+
+        if (callback) {
+            test({ form: jsonObject, formProofResponse: responseAsJson2 });
+        }
+        return responseAsJson2;
+    } catch (error) {
+        console.error("Error al guardar la grabación:", error);
+    } finally {
+        savingLoading = false;
+        record = false;
+        if (keepVideo) {
+            localStorage.removeItem(storageRecord);
+        }
     }
-    if (callback) {
-        test({ form: jsonObject, formProofResponse: responseAsJson2 });
-    }
-    return responseAsJson2;
 }
 
 async function formproofSaveRecord(data = {}) {
@@ -122,12 +141,15 @@ async function formproofSaveRecord(data = {}) {
     const clientIp = responseAsJson?.ip;
     const eventsToSubmit = !keepVideo ? {[pathNamePage]: events} : JSON.parse(localStorage.getItem(storageRecord));
     const dataSubmit = {
-        form: data,
+        form: jsonObject,
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
         token: token ? token : ''
     };
+    if (recordingId) {
+        dataSubmit.recordingId = recordingId;
+    }
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
     record = false;
@@ -136,6 +158,4 @@ async function formproofSaveRecord(data = {}) {
     }
     return await response.json();
 }
-
-window.formproofSaveRecord = formproofSaveRecord;
 
