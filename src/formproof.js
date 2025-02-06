@@ -105,7 +105,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         if (hiddenFormTraceInput && hiddenFormTraceInput.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('recordingId', recordingId);
-            redirectUrl.searchParams.set('token', token);
             console.log("Redirigiendo a:", redirectUrl.toString());
             window.location.href = redirectUrl.toString();
         }
