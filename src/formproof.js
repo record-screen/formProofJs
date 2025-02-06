@@ -21,7 +21,7 @@ if (scriptElement) {
     token = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
-    recordingId = urlParams.get("recordingId")
+    recordingId = urlParams.get("recordingId") || new URLSearchParams(window.location.search).get("recordingId");
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
