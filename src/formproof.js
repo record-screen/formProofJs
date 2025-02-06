@@ -89,8 +89,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
-        token: token ? token : '',
-        codeReg: codeReg ? codeReg.toString() : ''
+        token: token ? token : ''
     };
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
@@ -119,8 +118,7 @@ async function formproofSaveRecord(data = {}) {
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
-        token: token ? token : '',
-        codeReg: codeReg ? codeReg.toString() : ''
+        token: token ? token : ''
     };
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
