@@ -8165,7 +8165,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     record = false;
     console.log('formproofSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
-    const formTraceId = document.getElementById(hiddenFormTraceId)?.innerText || '';
+    const formTraceId = document.getElementById(hiddenFormTraceId).value || '';
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     jsonObject['terms'] = termsText;
     jsonObject['formTraceId'] = formTraceId;
