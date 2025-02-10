@@ -8090,7 +8090,6 @@ let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
 let hiddenFormTrace = 'hiddenFormTrace'
-let hiddenFormTraceId = 'hiddenFormTraceId'
 let callback = ''
 let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
@@ -8165,7 +8164,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     record = false;
     console.log('formproofSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
-    const formTraceId = document.getElementById(hiddenFormTraceId).value || '';
+    const formTraceId = document.getElementById("hiddenFormTraceId")?.value || "";
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     jsonObject['terms'] = termsText;
     jsonObject['formTraceId'] = formTraceId;
