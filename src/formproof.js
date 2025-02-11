@@ -17,6 +17,13 @@ let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("recordingId");
 
+if (recordingIdFromBrowser) {
+    const hiddenFormTraceInput = document.getElementById("hiddenFormTraceId");
+    if (hiddenFormTraceInput) {
+        hiddenFormTraceInput.value = recordingIdFromBrowser;
+    }
+}
+
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
@@ -115,7 +122,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('recordingId', responseAsJson2.recordingId);
-            console.log("Redirigiendo a:", redirectUrl.toString());
             window.location.href = redirectUrl.toString();
         }
 
