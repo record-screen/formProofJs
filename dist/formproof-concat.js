@@ -8164,10 +8164,12 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     record = false;
     console.log('formproofSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
-    const formTraceId = document.getElementById("hiddenFormTraceId").value || "";
+    const formTraceElement = document.getElementById("hiddenFormTraceId");
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     jsonObject['terms'] = termsText;
-    jsonObject['formTraceId'] = formTraceId;
+    if (formTraceElement && formTraceElement.value) {
+        jsonObject['formTraceId'] = formTraceElement.value;
+    }
     const userAgent = window.navigator.userAgent;
 
     try {
