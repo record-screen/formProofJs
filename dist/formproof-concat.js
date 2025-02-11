@@ -8099,9 +8099,9 @@ const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("recordingId");
 
 if (recordingIdFromBrowser) {
-    const hiddenFormTraceInput = document.getElementById("hiddenFormTraceId");
-    if (hiddenFormTraceInput) {
-        hiddenFormTraceInput.value = recordingIdFromBrowser;
+    const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
+    if (hiddenFormTraceInputId) {
+        hiddenFormTraceInputId.value = recordingIdFromBrowser;
     }
 }
 
@@ -8169,7 +8169,7 @@ addEventListener("submit", async (event) => {
 async function formproofSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true;
     record = false;
-    console.log('formproofSaveRecordWithOnsubmitEvent');
+    console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
     const formTraceElement = document.getElementById("hiddenFormTraceId");
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
@@ -8221,7 +8221,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
 }
 
 async function formproofSaveRecord(data = {}) {
-    console.log('formproofSaveRecord#saveRecord');
+    console.log('formTraceSaveRecord#saveRecord');
     savingLoading = true;
     const userAgent = window.navigator.userAgent;
     const responseIp = await fetch("https://api.ipify.org/?format=json");
