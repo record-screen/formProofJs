@@ -8,7 +8,7 @@ let tfaTwilio = false;
 let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
-let hiddenFormTrace = 'hiddenFormTrace'
+let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let callback = ''
 let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
@@ -114,7 +114,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        const hiddenFormTraceInput = document.getElementById(hiddenFormTrace);
+        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('recordingId', responseAsJson2.recordingId);
