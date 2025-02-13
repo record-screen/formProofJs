@@ -9,6 +9,7 @@ let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
 let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
+let codeReg = ''
 let callback = ''
 let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
@@ -31,6 +32,7 @@ if (scriptElement) {
     token = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
+    codeReg = urlParams.get("coReg")
     recordingId = recordingIdFromBrowser;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
@@ -100,13 +102,21 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const clientIp = responseAsJson?.ip;
         const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
 
+        const status = !recordingIdFromBrowser && codeReg ? "partial" : "completed";
+
         const dataSubmit = {
             form: jsonObject,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            token: token || ''
+            token: token || '',
+            status: status
         };
+
+        if (!recordingIdFromBrowser && codeReg) {
+            dataSubmit.provider = codeReg;
+        }
+
         if (recordingId) {
             dataSubmit.recordingId = recordingId;
         }
@@ -119,8 +129,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('recordingId', responseAsJson2.recordingId);
             window.location.href = redirectUrl.toString();
-        } else {
-            console.log("No se proporcionó una URL de redirección.");
         }
 
         if (callback) {
@@ -146,11 +154,12 @@ async function formproofSaveRecord(data = {}) {
     const clientIp = responseAsJson?.ip;
     const eventsToSubmit = !keepVideo ? {[pathNamePage]: events} : JSON.parse(localStorage.getItem(storageRecord));
     const dataSubmit = {
-        form: jsonObject,
+        form: data,
         events: JSON.stringify(eventsToSubmit),
         clientIp,
         userAgent,
-        token: token ? token : ''
+        token: token ? token : '',
+        status: 'completed'
     };
     if (recordingId) {
         dataSubmit.recordingId = recordingId;
