@@ -9,7 +9,7 @@ let blackList = false;
 let phoneInputId = ''
 let privacityInputId = ''
 let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
-let codeReg = ''
+let guide = ''
 let callback = ''
 let recordingId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
@@ -32,7 +32,7 @@ if (scriptElement) {
     token = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
-    codeReg = urlParams.get("coReg")
+    guide = urlParams.get("guide")
     recordingId = recordingIdFromBrowser;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
@@ -113,8 +113,8 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
             status: status
         };
 
-        if (!recordingIdFromBrowser && codeReg) {
-            dataSubmit.provider = codeReg;
+        if (!recordingIdFromBrowser && guide) {
+            dataSubmit.provider = guide;
         }
 
         if (recordingId) {
