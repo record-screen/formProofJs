@@ -8183,7 +8183,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const clientIp = responseAsJson?.ip;
         const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
 
-        const status = !recordingIdFromBrowser && codeReg ? "partial" : "completed";
+        const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
         const dataSubmit = {
             form: jsonObject,
