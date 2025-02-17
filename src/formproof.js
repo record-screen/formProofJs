@@ -16,7 +16,7 @@ let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
-const recordingIdFromBrowser = urlParamsBrowser.get("recordingId");
+const recordingIdFromBrowser = urlParamsBrowser.get("guideId");
 
 if (recordingIdFromBrowser) {
     const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
@@ -108,36 +108,30 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
 
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
-        let guideId = '';
-        if (!recordingIdFromBrowser && guide) {
-            guideId = generateUUID();
-        }
-
         const dataSubmit = {
             form: jsonObject,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
             token: token || '',
-            status: status,
-            guideId: guideId
+            status: status
         };
 
         if (!recordingIdFromBrowser && guide) {
             dataSubmit.provider = guide;
+            dataSubmit.guideId = generateUUID()
         }
 
         if (recordingId) {
             dataSubmit.recordingId = recordingId;
         }
 
-        if (guideId) {
-            const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
-            if (hiddenFormTraceInput?.value) {
-                const redirectUrl = new URL(hiddenFormTraceInput.value);
-                redirectUrl.searchParams.set('recordingId', guideId);
-                window.location.href = redirectUrl.toString();
-            }
+
+        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
+        if (hiddenFormTraceInput?.value) {
+            const redirectUrl = new URL(hiddenFormTraceInput.value);
+            redirectUrl.searchParams.set('guideId', recordingId ? recordingId : dataSubmit.guideId);
+            window.location.href = redirectUrl.toString();
         }
 
         const response = await saveRecordings(dataSubmit);
@@ -156,6 +150,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         }
     }
 }
+
 async function formproofSaveRecord(data = {}) {
     console.log('formTraceSaveRecord#saveRecord');
     savingLoading = true;
