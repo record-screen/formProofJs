@@ -87,6 +87,10 @@ addEventListener("submit", async (event) => {
     }
 });
 
+function generateUUID() {
+    return crypto.randomUUID();
+}
+
 async function formproofSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true;
     record = false;
@@ -104,13 +108,19 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
 
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
+        let guideId = '';
+        if (!recordingIdFromBrowser && guide) {
+            guideId = generateUUID();
+        }
+
         const dataSubmit = {
             form: jsonObject,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
             token: token || '',
-            status: status
+            status: status,
+            guideId: guideId
         };
 
         if (!recordingIdFromBrowser && guide) {
@@ -121,15 +131,17 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
             dataSubmit.recordingId = recordingId;
         }
 
+        if (guideId) {
+            const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
+            if (hiddenFormTraceInput?.value) {
+                const redirectUrl = new URL(hiddenFormTraceInput.value);
+                redirectUrl.searchParams.set('recordingId', guideId);
+                window.location.href = redirectUrl.toString();
+            }
+        }
+
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
-
-        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
-        if (hiddenFormTraceInput?.value) {
-            const redirectUrl = new URL(hiddenFormTraceInput.value);
-            redirectUrl.searchParams.set('recordingId', responseAsJson2.recordingId);
-            window.location.href = redirectUrl.toString();
-        }
 
         if (callback) {
             test({ form: jsonObject, formProofResponse: responseAsJson2 });
@@ -144,7 +156,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         }
     }
 }
-
 async function formproofSaveRecord(data = {}) {
     console.log('formTraceSaveRecord#saveRecord');
     savingLoading = true;
