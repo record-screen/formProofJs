@@ -8093,7 +8093,6 @@ let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let guide = ''
 let callback = ''
 let recordingId = ''
-let guideId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
@@ -8205,7 +8204,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         }
 
         if (recordingId) {
-            dataSubmit.recordingId = guideId;
+            dataSubmit.guideId = recordingId;
         }
 
 
