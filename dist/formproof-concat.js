@@ -8092,7 +8092,7 @@ let privacityInputId = ''
 let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let guide = ''
 let callback = ''
-let recordingId = ''
+let guideId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
@@ -8114,7 +8114,7 @@ if (scriptElement) {
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
     guide = urlParams.get("guide")
-    recordingId = recordingIdFromBrowser;
+    guideId = recordingIdFromBrowser;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -8203,15 +8203,15 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
             dataSubmit.guideId = generateUUID()
         }
 
-        if (recordingId) {
-            dataSubmit.guideId = recordingId;
+        if (guideId) {
+            dataSubmit.guideId = guideId;
         }
 
 
         const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
-            redirectUrl.searchParams.set('guideId', recordingId ? recordingId : dataSubmit.guideId);
+            redirectUrl.searchParams.set('guideId', guideId ? guideId : dataSubmit.guideId);
             window.location.href = redirectUrl.toString();
         }
 
@@ -8248,8 +8248,8 @@ async function formproofSaveRecord(data = {}) {
         token: token ? token : '',
         status: 'completed'
     };
-    if (recordingId) {
-        dataSubmit.recordingId = recordingId;
+    if (guideId) {
+        dataSubmit.recordingId = guideId;
     }
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
