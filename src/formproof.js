@@ -47,7 +47,6 @@ const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
 const formProofApiSave = `${baseApi}/recordings`;
-const formTraceApiNewEvents = `${baseApi}/recordings/recording/newStorage`;
 let savingLoading = false;
 let record = true;
 const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
