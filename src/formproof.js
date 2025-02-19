@@ -11,12 +11,12 @@ let privacityInputId = ''
 let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let guide = ''
 let callback = ''
-let guideId = ''
+let formTraceId = ''
 let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
-const recordingIdFromBrowser = urlParamsBrowser.get("guideId");
+const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
 
 if (recordingIdFromBrowser) {
     const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
@@ -33,7 +33,7 @@ if (scriptElement) {
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
     guide = urlParams.get("guide")
-    guideId = recordingIdFromBrowser;
+    formTraceId = recordingIdFromBrowser;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -95,8 +95,10 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     record = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
+    const formTrace = document.getElementById(formTraceId);
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     jsonObject['terms'] = termsText;
+    jsonObject['formTraceId'] = formTrace?.value
     const userAgent = window.navigator.userAgent;
 
     try {
@@ -118,18 +120,18 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
 
         if (!recordingIdFromBrowser && guide) {
             dataSubmit.provider = guide;
-            dataSubmit.guideId = generateUUID()
+            dataSubmit.formTraceId = generateUUID()
         }
 
-        if (guideId) {
-            dataSubmit.guideId = guideId;
+        if (formTraceId) {
+            dataSubmit.formTraceId = formTraceId;
         }
 
 
         const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
-            redirectUrl.searchParams.set('guideId', guideId ? guideId : dataSubmit.guideId);
+            redirectUrl.searchParams.set('formTraceId', formTraceId ? formTraceId : dataSubmit.formTraceId);
             window.location.href = redirectUrl.toString();
         }
 
@@ -166,8 +168,8 @@ async function formproofSaveRecord(data = {}) {
         token: token ? token : '',
         status: 'completed'
     };
-    if (guideId) {
-        dataSubmit.recordingId = guideId;
+    if (formTraceId) {
+        dataSubmit.formTraceId = formTraceId;
     }
     const response = await saveRecordings(dataSubmit)
     savingLoading = false;
