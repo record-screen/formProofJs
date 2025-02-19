@@ -8157,6 +8157,7 @@ function formProoftStartRecord() {
 }
 
 addEventListener("submit", async (event) => {
+    event.preventDefault();
     if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false') {
         await tfaValidation(tfaTwilio, phoneInputId, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit, event);
     } else if (blackList && blackList === 'true') {
