@@ -8176,10 +8176,11 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     record = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId)?.innerText || '';
-    const formTrace = document.getElementById(formTraceId);
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     jsonObject['terms'] = termsText;
-    jsonObject['formTraceId'] = formTrace?.value
+    const formTraceIdValue = recordingIdFromBrowser || generateUUID();
+    jsonObject['formTraceId'] = formTraceIdValue;
+
     const userAgent = window.navigator.userAgent;
 
     try {
@@ -8201,18 +8202,17 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
 
         if (!recordingIdFromBrowser && guide) {
             dataSubmit.provider = guide;
-            dataSubmit.formTraceId = generateUUID()
+            dataSubmit.formTraceId = generateUUID();
         }
 
-        if (formTraceId) {
-            dataSubmit.formTraceId = formTraceId;
+        if (formTraceIdValue) {
+            dataSubmit.formTraceId = formTraceIdValue;
         }
-
 
         const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
-            redirectUrl.searchParams.set('formTraceId', formTraceId ? formTraceId : dataSubmit.formTraceId);
+            redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
             window.location.href = redirectUrl.toString();
         }
 
