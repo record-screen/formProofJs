@@ -8099,14 +8099,6 @@ let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
 
-if (recordingIdFromBrowser) {
-    const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
-    if (hiddenFormTraceInputId) {
-        hiddenFormTraceInputId.value = recordingIdFromBrowser;
-    }
-}
-
-
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
