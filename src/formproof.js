@@ -94,8 +94,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true;
     record = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
-    console.log('Result', data);
-
     const termsText = document.getElementById(privacityInputId);
     if (termsText) {
         data['terms'] = termsText.innerText;
