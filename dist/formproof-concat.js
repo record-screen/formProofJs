@@ -8167,11 +8167,17 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true;
     record = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
-    const termsText = document.getElementById(privacityInputId)?.innerText || '';
-    const jsonObject = Object.fromEntries(Array.from(data.entries()));
-    jsonObject['terms'] = termsText;
-    const formTraceIdValue = recordingIdFromBrowser || generateUUID();
-    jsonObject['formTraceId'] = formTraceIdValue;
+    const termsText = document.getElementById(privacityInputId);
+    if (termsText) {
+        data['terms'] = termsText.innerText;
+    }
+
+    let formTraceIdValue;
+
+    if (recordingIdFromBrowser || guide) {
+        formTraceIdValue = recordingIdFromBrowser || generateUUID();
+        data['formTraceId'] = formTraceIdValue;
+    }
 
     const userAgent = window.navigator.userAgent;
 
@@ -8180,11 +8186,10 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
         const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
-
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
         const dataSubmit = {
-            form: jsonObject,
+            form: data,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
@@ -8212,7 +8217,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseAsJson2 = await response.json();
 
         if (callback) {
-            test({ form: jsonObject, formProofResponse: responseAsJson2 });
+            test({ form: data, formProofResponse: responseAsJson2 });
         }
         return responseAsJson2;
     } catch (error) {
@@ -8224,7 +8229,6 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         }
     }
 }
-
 async function formproofSaveRecord(data = {}) {
     console.log('formTraceSaveRecord#saveRecord');
     savingLoading = true;
@@ -8481,9 +8485,17 @@ function formatPhoneNumber(phone) {
 async function saveRecording(saveOnSubmit, event) {
     if (saveOnSubmit) {
         console.log('formTrace#saving on submit');
-        const data = new FormData(event.target);
+        if (!event.target || !(event.target instanceof HTMLFormElement)) {
+            console.error("Invalid form element");
+            return;
+        }
+        const formData = new FormData(event.target);
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
         const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
-        console.log('Record key: ', recordKey)
+        console.log('Record key: ', recordKey);
     }
     // event.target.submit();
 }
