@@ -8139,11 +8139,11 @@ if (automaticRecord) {
     console.log('formTrace start..');
 
     if (debug && guide) {
-        alert("Formtrace loaded and coreg");
+        alert("Formtrace loaded and script coreg");
     } else if (debug) {
-        alert("Formtrace loaded and normal");
+        alert("Formtrace loaded and script normal");
     } else if (guide) {
-        alert("Token coreg");
+        alert("script coreg");
     }
 
     formTraceStartRecord();
@@ -8175,7 +8175,7 @@ addEventListener("submit", async (event) => {
     }
 
     if (debug) {
-        alertMessage = alertMessage ? `${alertMessage} | Formtrace submit event` : "Formtrace submit event";
+        alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
     }
 
     if (alertMessage) {
