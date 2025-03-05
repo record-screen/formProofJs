@@ -8115,6 +8115,7 @@ if (scriptElement) {
     callback = urlParams.get("callback");
     guide = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
+    debug = urlParams.get("debug") ? urlParams.get("debug") : false;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -8123,11 +8124,11 @@ if (scriptElement) {
 } else {
     console.error("You need add id='formproofScript' to script")
 }
-const events = [];
-const storageRecord = 'FORMPROOF_EVENTS';
+const formTraceEvents = [];
+const storageRecord = 'FORMTRACE_EVENTS';
 let pathNamePage = window.location.pathname;
-let eventsToSave = {};
-const formProofApiSave = `${baseApi}/recordings`;
+let formTraceEventsToSave = {};
+const formTraceApiSave = `${baseApi}/recordings`;
 let savingLoading = false;
 let record = true;
 const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
@@ -8135,20 +8136,29 @@ const validateTfCodeApi = `${baseApi}/tfa/validate`;
 const validateBlackListApi = `${baseApi}/blacklist`;
 
 if (automaticRecord) {
-    console.log('formTrace start..')
-    formProoftStartRecord()
+    console.log('formTrace start..');
+
+    if (debug && guide) {
+        alert("Formtrace loaded and coreg");
+    } else if (debug) {
+        alert("Formtrace loaded and normal");
+    } else if (guide) {
+        alert("Token coreg");
+    }
+
+    formTraceStartRecord();
 }
 
-function formProoftStartRecord() {
+function formTraceStartRecord() {
     rrweb.record({
         emit(event) {
             if (record) {
-                eventsToSave = localStorage.getItem(storageRecord) ? JSON.parse(localStorage.getItem(storageRecord)) : {};
-                eventsToSave[pathNamePage] = [];
-                events.push(event);
+                formTraceEventsToSave = localStorage.getItem(storageRecord) ? JSON.parse(localStorage.getItem(storageRecord)) : {};
+                formTraceEventsToSave[pathNamePage] = [];
+                formTraceEvents.push(event);
                 if (keepVideo) {
-                    eventsToSave[pathNamePage] = Object.assign(events);
-                    localStorage.setItem(storageRecord, JSON.stringify(eventsToSave));
+                    formTraceEventsToSave[pathNamePage] = Object.assign(formTraceEvents);
+                    localStorage.setItem(storageRecord, JSON.stringify(formTraceEventsToSave));
                 }
             }
         },
@@ -8157,15 +8167,32 @@ function formProoftStartRecord() {
 }
 
 addEventListener("submit", async (event) => {
+    const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
+    let alertMessage = "";
+
+    if (hiddenFormTrace?.value) {
+        alertMessage = `Script coreg and redirect to ${hiddenFormTrace.value}`;
+    }
+
+    if (debug) {
+        alertMessage = alertMessage ? `${alertMessage} | Formtrace submit event` : "Formtrace submit event";
+    }
+
+    if (alertMessage) {
+        alert(alertMessage);
+    }
+
     event.preventDefault();
+
     if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false') {
         await tfaValidation(tfaTwilio, phoneInputId, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit, event);
     } else if (blackList && blackList === 'true') {
-        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackListApi, saveOnSubmit, event)
+        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackListApi, saveOnSubmit, event);
     } else {
-        await saveRecording(saveOnSubmit, event)
+        await saveRecording(saveOnSubmit, event);
     }
 });
+
 
 function generateUUID() {
     return crypto.randomUUID();
@@ -8193,7 +8220,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo ? { [pathNamePage]: events } : JSON.parse(localStorage.getItem(storageRecord));
+        const eventsToSubmit = !keepVideo ? { [pathNamePage]: formTraceEvents } : JSON.parse(localStorage.getItem(storageRecord));
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
         const dataSubmit = {
@@ -8237,33 +8264,76 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         }
     }
 }
-async function formproofSaveRecord(data = {}) {
-    console.log('formTraceSaveRecord#saveRecord');
+
+async function formTraceSaveRecord(data = {}) {
     savingLoading = true;
-    const userAgent = window.navigator.userAgent;
-    const responseIp = await fetch("https://api.ipify.org/?format=json");
-    const responseAsJson = await responseIp.json();
-    const clientIp = responseAsJson?.ip;
-    const eventsToSubmit = !keepVideo ? {[pathNamePage]: events} : JSON.parse(localStorage.getItem(storageRecord));
-    const dataSubmit = {
-        form: data,
-        events: JSON.stringify(eventsToSubmit),
-        clientIp,
-        userAgent,
-        token: token ? token : '',
-        status: 'completed'
-    };
-    if (formTraceId) {
-        dataSubmit.formTraceId = formTraceId;
-    }
-    const response = await saveRecordings(dataSubmit)
-    savingLoading = false;
     record = false;
-    if (keepVideo) {
-        localStorage.removeItem(storageRecord);
+    console.log('formTraceSaveRecordWithOnsubmitEvent');
+    const termsText = document.getElementById(privacityInputId);
+    if (termsText) {
+        data['terms'] = termsText.innerText;
     }
-    return await response.json();
+
+    let formTraceIdValue;
+
+    if (recordingIdFromBrowser || guide) {
+        formTraceIdValue = recordingIdFromBrowser || generateUUID();
+        data['formTraceId'] = formTraceIdValue;
+    }
+
+    const userAgent = window.navigator.userAgent;
+
+    try {
+        const responseIp = await fetch("https://api.ipify.org/?format=json");
+        const responseAsJson = await responseIp.json();
+        const clientIp = responseAsJson?.ip;
+        const eventsToSubmit = !keepVideo ? { [pathNamePage]: formTraceEvents } : JSON.parse(localStorage.getItem(storageRecord));
+        const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
+
+        const dataSubmit = {
+            form: data,
+            events: JSON.stringify(eventsToSubmit),
+            clientIp,
+            userAgent,
+            token: token || '',
+            status: status
+        };
+
+        if (!recordingIdFromBrowser && guide) {
+            dataSubmit.provider = guide;
+            dataSubmit.formTraceId = generateUUID();
+        }
+
+        if (formTraceIdValue) {
+            dataSubmit.formTraceId = formTraceIdValue;
+        }
+
+        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
+        if (hiddenFormTraceInput?.value) {
+            const redirectUrl = new URL(hiddenFormTraceInput.value);
+            redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
+            window.location.href = redirectUrl.toString();
+        }
+
+        const response = await saveRecordings(dataSubmit);
+        const responseAsJson2 = await response.json();
+
+        if (callback) {
+            test({ form: data, formProofResponse: responseAsJson2 });
+        }
+        return responseAsJson2;
+    } catch (error) {
+        console.error("Error al guardar la grabación:", error);
+    } finally {
+        savingLoading = false;
+        if (keepVideo) {
+            localStorage.removeItem(storageRecord);
+        }
+    }
 }
+
+window.formTraceSaveRecord = formTraceSaveRecord;
+
 
 
 async function tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event) {
@@ -8571,7 +8641,7 @@ async function verifyPhoneBlackListApi(phone, token) {
 }
 
 async function saveRecordings(dataSubmit) {
-    return await fetch(formProofApiSave, {
+    return await fetch(formTraceApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
