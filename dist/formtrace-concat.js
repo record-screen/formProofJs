@@ -8081,7 +8081,7 @@ var rrweb = (function (exports) {
 
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
-let token = ''
+let _formTraceToken = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
@@ -8093,7 +8093,7 @@ let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let guide = ''
 let callback = ''
 let formTraceId = ''
-let baseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
+let _formTraceBaseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
@@ -8110,12 +8110,12 @@ if (recordingIdFromBrowser) {
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
-    token = urlParams.get("token");
+    _formTraceToken = urlParams.get("token");
     phoneInputId = urlParams.get("phoneInputId");
     callback = urlParams.get("callback");
     guide = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
-    debug = urlParams.get("debug") ? urlParams.get("debug") : false;
+    _formTraceDebug = urlParams.get("debug") ? urlParams.get("debug") : false;
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -8124,26 +8124,26 @@ if (scriptElement) {
 } else {
     console.error("You need add id='formproofScript' to script")
 }
-const formTraceEvents = [];
-const storageRecord = 'FORMTRACE_EVENTS';
-let pathNamePage = window.location.pathname;
-let formTraceEventsToSave = {};
-const formTraceApiSave = `${baseApi}/recordings`;
-let savingLoading = false;
-let record = true;
-const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
-const validateTfCodeApi = `${baseApi}/tfa/validate`;
-const validateBlackListApi = `${baseApi}/blacklist`;
+const _formTraceEvents = [];
+const _formTraceStorageRecord = 'FORMTRACE_EVENTS';
+let _formTracePathNamePage = window.location.pathname;
+let _formTraceEventsToSave = {};
+const _formTraceApiSave = `${_formTraceBaseApi}/recordings`;
+let _formTraceSavingLoading = false;
+let _formTraceRecord = true;
+const sendTfaCodeApi = `${_formTraceBaseApi}/tfa/sendCode`;
+const validateTfCodeApi = `${_formTraceBaseApi}/tfa/validate`;
+const validateBlackListApi = `${_formTraceBaseApi}/blacklist`;
 
 if (automaticRecord) {
     console.log('formTrace start..');
 
-    if (debug && guide) {
-        alert("Formtrace loaded and script coreg");
-    } else if (debug) {
-        alert("Formtrace loaded and script normal");
+    if (_formTraceDebug && guide) {
+        alert("Formtrace loaded coreg");
+    } else if (_formTraceDebug) {
+        alert("Formtrace loaded normal");
     } else if (guide) {
-        alert("script coreg");
+        alert("Formtrace coreg");
     }
 
     formTraceStartRecord();
@@ -8152,13 +8152,13 @@ if (automaticRecord) {
 function formTraceStartRecord() {
     rrweb.record({
         emit(event) {
-            if (record) {
-                formTraceEventsToSave = localStorage.getItem(storageRecord) ? JSON.parse(localStorage.getItem(storageRecord)) : {};
-                formTraceEventsToSave[pathNamePage] = [];
-                formTraceEvents.push(event);
+            if (_formTraceRecord) {
+                _formTraceEventsToSave = localStorage.getItem(_formTraceStorageRecord) ? JSON.parse(localStorage.getItem(_formTraceStorageRecord)) : {};
+                _formTraceEventsToSave[_formTracePathNamePage] = [];
+                _formTraceEvents.push(event);
                 if (keepVideo) {
-                    formTraceEventsToSave[pathNamePage] = Object.assign(formTraceEvents);
-                    localStorage.setItem(storageRecord, JSON.stringify(formTraceEventsToSave));
+                    _formTraceEventsToSave[_formTracePathNamePage] = Object.assign(_formTraceEvents);
+                    localStorage.setItem(_formTraceStorageRecord, JSON.stringify(_formTraceEventsToSave));
                 }
             }
         },
@@ -8168,14 +8168,23 @@ function formTraceStartRecord() {
 
 addEventListener("submit", async (event) => {
     const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
+    const termsText = document.getElementById(privacityInputId);
+
     let alertMessage = "";
 
     if (hiddenFormTrace?.value) {
-        alertMessage = `Script coreg and redirect to ${hiddenFormTrace.value}`;
+        alertMessage = `Formtrace coreg and redirect to ${hiddenFormTrace.value}`;
     }
 
-    if (debug) {
+    if (_formTraceDebug) {
         alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
+    }
+
+    if (termsText) {
+        const termsContent = termsText.innerText.trim();
+        if (termsContent) {
+            alertMessage = alertMessage ? `${alertMessage} | Terms: ${termsContent}` : `Terms: ${termsContent}`;
+        }
     }
 
     if (alertMessage) {
@@ -8194,13 +8203,14 @@ addEventListener("submit", async (event) => {
 });
 
 
+
 function generateUUID() {
     return crypto.randomUUID();
 }
 
 async function formproofSaveRecordWithOnsubmitEvent(data) {
-    savingLoading = true;
-    record = false;
+    _formTraceSavingLoading = true;
+    _formTraceRecord = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId);
     if (termsText) {
@@ -8220,7 +8230,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo ? { [pathNamePage]: formTraceEvents } : JSON.parse(localStorage.getItem(storageRecord));
+        const eventsToSubmit = !keepVideo ? { [_formTracePathNamePage]: _formTraceEvents } : JSON.parse(localStorage.getItem(_formTraceStorageRecord));
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
         const dataSubmit = {
@@ -8228,7 +8238,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            token: token || '',
+            token: _formTraceToken || '',
             status: status
         };
 
@@ -8258,16 +8268,16 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     } catch (error) {
         console.error("Error al guardar la grabación:", error);
     } finally {
-        savingLoading = false;
+        _formTraceSavingLoading = false;
         if (keepVideo) {
-            localStorage.removeItem(storageRecord);
+            localStorage.removeItem(_formTraceStorageRecord);
         }
     }
 }
 
 async function formTraceSaveRecord(data = {}) {
-    savingLoading = true;
-    record = false;
+    _formTraceSavingLoading = true;
+    _formTraceRecord = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId);
     if (termsText) {
@@ -8287,7 +8297,7 @@ async function formTraceSaveRecord(data = {}) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo ? { [pathNamePage]: formTraceEvents } : JSON.parse(localStorage.getItem(storageRecord));
+        const eventsToSubmit = !keepVideo ? { [_formTracePathNamePage]: _formTraceEvents } : JSON.parse(localStorage.getItem(_formTraceStorageRecord));
         const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
 
         const dataSubmit = {
@@ -8295,7 +8305,7 @@ async function formTraceSaveRecord(data = {}) {
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            token: token || '',
+            token: _formTraceToken || '',
             status: status
         };
 
@@ -8325,9 +8335,9 @@ async function formTraceSaveRecord(data = {}) {
     } catch (error) {
         console.error("Error al guardar la grabación:", error);
     } finally {
-        savingLoading = false;
+        _formTraceSavingLoading = false;
         if (keepVideo) {
-            localStorage.removeItem(storageRecord);
+            localStorage.removeItem(_formTraceStorageRecord);
         }
     }
 }
@@ -8641,7 +8651,7 @@ async function verifyPhoneBlackListApi(phone, token) {
 }
 
 async function saveRecordings(dataSubmit) {
-    return await fetch(formTraceApiSave, {
+    return await fetch(_formTraceApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
