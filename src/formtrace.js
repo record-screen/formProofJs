@@ -46,9 +46,7 @@ if (scriptElement) {
 }
 const events_formtrace = [];
 const storageRecord_formtrace = 'FORMTRACE_EVENTS';
-let pathNamePage_formtrace = window.location.pathname;
-let eventsToSave_formtrace = {};
-const formTraceApiSave = `${baseApi_formtrace}/test`;
+const formTraceApiSave = `${baseApi_formtrace}/recordings`;
 let savingLoading_formtrace = false;
 let record_formtrace = true;
 const sendTfaCodeApi = `${baseApi_formtrace}/tfa/sendCode`;
@@ -56,14 +54,13 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.2 initialized');
+    console.log('formTrace v.1.0.3 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
         alert("Formtrace loaded normal");
     }
 
-    localStorage.setItem(storageRecord_formtrace, {});
     formTraceStartRecord();
 }
 
@@ -71,13 +68,7 @@ function formTraceStartRecord() {
     rrweb.record({
         emit(event) {
             if (record_formtrace) {
-                eventsToSave_formtrace = localStorage.getItem(storageRecord_formtrace) ? JSON.parse(localStorage.getItem(storageRecord_formtrace)) : {};
-                eventsToSave_formtrace[pathNamePage_formtrace] = [];
                 events_formtrace.push(event);
-                if (keepVideo_formtrace) {
-                    eventsToSave_formtrace[pathNamePage_formtrace] = Object.assign(events_formtrace);
-                    localStorage.setItem(storageRecord_formtrace, JSON.stringify(eventsToSave_formtrace));
-                }
             }
         },
         recordCanvas: true,
@@ -153,8 +144,9 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo_formtrace ? { [pathNamePage_formtrace]: events_formtrace } : JSON.parse(localStorage.getItem(storageRecord_formtrace));
+        const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" : "completed";
+
 
         const dataSubmit = {
             form: data,
@@ -180,6 +172,8 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
             window.location.href = redirectUrl.toString();
         }
+
+        alert("Form submission blocked")
 
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
@@ -220,7 +214,7 @@ async function formTraceSaveRecord(data = {}) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo_formtrace ? { [pathNamePage_formtrace]: events_formtrace } : JSON.parse(localStorage.getItem(storageRecord_formtrace));
+        const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" : "completed";
 
         const dataSubmit = {
