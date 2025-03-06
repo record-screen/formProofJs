@@ -10,6 +10,8 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
+        console.log(data)
+        alert("Form submission blocked")
         const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey);
     }

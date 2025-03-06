@@ -84,46 +84,44 @@ function formTraceStartRecord() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.addEventListener("submit", (event) => {
+    document.addEventListener("submit", async (event) => {
         event.preventDefault();
+        event.stopPropagation();
         console.log("Form submission blocked:", event.target);
-        alert("Form submission blocked")
-    }, true);
-});
 
-addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
-    const termsText = document.getElementById(privacityInputId_formtrace);
+        const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
+        const termsText = document.getElementById(privacityInputId_formtrace);
 
-    let alertMessage = "";
+        let alertMessage = "";
 
-    if (hiddenFormTrace?.value) {
-        alertMessage = `Formtrace coreg and redirect to ${hiddenFormTrace.value}`;
-    }
-
-    if (debug_formtrace) {
-        alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
-    }
-
-    if (termsText) {
-        const termsContent = termsText.innerText.trim();
-        if (termsContent) {
-            alertMessage = alertMessage ? `${alertMessage} | Terms: ${termsContent}` : `Terms: ${termsContent}`;
+        if (hiddenFormTrace?.value) {
+            alertMessage = `Formtrace coreg and redirect to ${hiddenFormTrace.value}`;
         }
-    }
 
-    if (alertMessage) {
-        alert(alertMessage);
-    }
+        if (debug_formtrace) {
+            alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
+        }
 
-    if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
-        await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
-    } else if (blackList_formtrace && blackList_formtrace === 'true') {
-        await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
-    } else {
-        await saveRecording(saveOnSubmit_formtrace, event);
-    }
+        if (termsText) {
+            const termsContent = termsText.innerText.trim();
+            if (termsContent) {
+                alertMessage = alertMessage ? `${alertMessage} | Terms: ${termsContent}` : `Terms: ${termsContent}`;
+            }
+        }
+
+        if (alertMessage) {
+            alert(alertMessage);
+        }
+
+        if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
+            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+        } else if (blackList_formtrace && blackList_formtrace === 'true') {
+            await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
+        } else {
+            await saveRecording(saveOnSubmit_formtrace, event);
+        }
+
+    }, true);
 });
 
 
