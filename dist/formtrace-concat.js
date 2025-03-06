@@ -8129,7 +8129,7 @@ const events_formtrace = [];
 const storageRecord_formtrace = 'FORMTRACE_EVENTS';
 let pathNamePage_formtrace = window.location.pathname;
 let eventsToSave_formtrace = {};
-const formTraceApiSave = `${baseApi_formtrace}/recordings`;
+const formTraceApiSave = `${baseApi_formtrace}/test`;
 let savingLoading_formtrace = false;
 let record_formtrace = true;
 const sendTfaCodeApi = `${baseApi_formtrace}/tfa/sendCode`;
@@ -8137,13 +8137,14 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.1 initialized');
+    console.log('formTrace v.1.0.2 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
         alert("Formtrace loaded normal");
     }
 
+    localStorage.setItem(storageRecord_formtrace, {});
     formTraceStartRecord();
 }
 
