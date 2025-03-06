@@ -8164,6 +8164,14 @@ function formTraceStartRecord() {
     });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("submit", (event) => {
+        event.preventDefault();
+        console.log("Form submission blocked:", event.target);
+        alert("Form submission blocked")
+    }, true);
+});
+
 addEventListener("submit", async (event) => {
     event.preventDefault();
     const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
