@@ -1,4 +1,6 @@
 const {series} = require('gulp');
+const pkg = require('./package.json');
+const version = pkg.version;
 const gulp = require('gulp'),
     gp_concat = require('gulp-concat'),
     gp_rename = require('gulp-rename'),
@@ -21,10 +23,10 @@ function build(apiEnvironment, cb) {
     console.log('Build');
     gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/formtrace.js', 'src/tfaValidation.js', 'src/saveRecording.js', 'src/blackListPhone.js', 'src/utils/send2faCode.js', "src/utils/validate2faCode.js",
         "src/utils/verifyPhoneBlackListApi.js", "src/utils/saveRecordings.js"])
-        .pipe(gp_concat('formtrace-concat.js'))
+        .pipe(gp_concat(`formtrace-concat-v${version}.js`))
         .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
         .pipe(gulp.dest('dist'))
-        .pipe(gp_rename('formtrace.js'))
+        .pipe(gp_rename(`formtrace-v${version}.js`))
         .pipe(gp_uglify())
         .pipe(gulp.dest('dist'));
     cb();

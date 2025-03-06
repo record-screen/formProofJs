@@ -45,7 +45,6 @@ if (scriptElement) {
     console.error("You need add id='formproofScript' to script")
 }
 const events_formtrace = [];
-const storageRecord_formtrace = 'FORMTRACE_EVENTS';
 const formTraceApiSave = `${baseApi_formtrace}/recordings`;
 let savingLoading_formtrace = false;
 let record_formtrace = true;
@@ -186,9 +185,6 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         console.error("Error al guardar la grabación:", error);
     } finally {
         savingLoading_formtrace = false;
-        if (keepVideo_formtrace) {
-            localStorage.removeItem(storageRecord_formtrace);
-        }
     }
 }
 
@@ -253,9 +249,6 @@ async function formTraceSaveRecord(data = {}) {
         console.error("Error al guardar la grabación:", error);
     } finally {
         savingLoading_formtrace = false;
-        if (keepVideo_formtrace) {
-            localStorage.removeItem(storageRecord_formtrace);
-        }
     }
 }
 
