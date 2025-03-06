@@ -10,8 +10,7 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
-        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
+        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey);
     }
-    // event.target.submit();
 }

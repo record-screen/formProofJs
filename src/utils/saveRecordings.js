@@ -1,5 +1,5 @@
 async function saveRecordings(dataSubmit) {
-    return await fetch(_formTraceApiSave, {
+    return await fetch(formTraceApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {

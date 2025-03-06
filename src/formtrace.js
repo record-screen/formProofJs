@@ -1,18 +1,19 @@
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
-let _formTraceToken = ''
-let automaticRecord = true;
-let saveOnSubmit = true;
-let keepVideo = false;
-let tfaTwilio = false;
-let blackList = false;
-let phoneInputId = ''
-let privacityInputId = ''
+let token = ''
+let automaticRecord_formtrace = true;
+let saveOnSubmit_formtrace = true;
+let keepVideo_formtrace = false;
+let tfaTwilio_formtrace = false;
+let blackList_formtrace = false;
+let phoneInputId_formtrace = ''
+let privacityInputId_formtrace = ''
 let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
-let guide = ''
-let callback = ''
+let guide_formtrace = ''
+let callback_formtrace = ''
 let formTraceId = ''
-let _formTraceBaseApi = 'https://splendid-binary-uynxj.ampt.app/api'
+let debug_formtrace = ''
+let baseApi_formtrace = 'https://splendid-binary-uynxj.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
@@ -29,40 +30,37 @@ if (recordingIdFromBrowser) {
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
-    _formTraceToken = urlParams.get("token");
-    phoneInputId = urlParams.get("phoneInputId");
-    callback = urlParams.get("callback");
-    guide = urlParams.get("guide")
+    token_formtrace = urlParams.get("token");
+    phoneInputId_formtrace = urlParams.get("phoneInputId");
+    callback_formtrace = urlParams.get("callback");
+    guide_formtrace = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
-    _formTraceDebug = urlParams.get("debug") ? urlParams.get("debug") : false;
-    keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
-    tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
-    blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
-    privacityInputId = urlParams.get("privacityId");
-    saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
+    debug_formtrace = urlParams.get("debug") ? urlParams.get("debug") : false;
+    keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
+    tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
+    blackList_formtrace = urlParams.get("blackList") ? urlParams.get("blackList") : false;
+    privacityInputId_formtrace = urlParams.get("privacityId");
+    saveOnSubmit_formtrace = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
 }
-const _formTraceEvents = [];
-const _formTraceStorageRecord = 'FORMTRACE_EVENTS';
-let _formTracePathNamePage = window.location.pathname;
-let _formTraceEventsToSave = {};
-const _formTraceApiSave = `${_formTraceBaseApi}/recordings`;
-let _formTraceSavingLoading = false;
-let _formTraceRecord = true;
-const sendTfaCodeApi = `${_formTraceBaseApi}/tfa/sendCode`;
-const validateTfCodeApi = `${_formTraceBaseApi}/tfa/validate`;
-const validateBlackListApi = `${_formTraceBaseApi}/blacklist`;
+const events_formtrace = [];
+const storageRecord_formtrace = 'FORMTRACE_EVENTS';
+let pathNamePage_formtrace = window.location.pathname;
+let eventsToSave_formtrace = {};
+const formTraceApiSave = `${baseApi_formtrace}/recordings`;
+let savingLoading_formtrace = false;
+let record_formtrace = true;
+const sendTfaCodeApi = `${baseApi_formtrace}/tfa/sendCode`;
+const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
+const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
-if (automaticRecord) {
+if (automaticRecord_formtrace) {
     console.log('formTrace start..');
-
-    if (_formTraceDebug && guide) {
+    if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
-    } else if (_formTraceDebug) {
+    } else if (debug_formtrace) {
         alert("Formtrace loaded normal");
-    } else if (guide) {
-        alert("Formtrace coreg");
     }
 
     formTraceStartRecord();
@@ -71,13 +69,13 @@ if (automaticRecord) {
 function formTraceStartRecord() {
     rrweb.record({
         emit(event) {
-            if (_formTraceRecord) {
-                _formTraceEventsToSave = localStorage.getItem(_formTraceStorageRecord) ? JSON.parse(localStorage.getItem(_formTraceStorageRecord)) : {};
-                _formTraceEventsToSave[_formTracePathNamePage] = [];
-                _formTraceEvents.push(event);
-                if (keepVideo) {
-                    _formTraceEventsToSave[_formTracePathNamePage] = Object.assign(_formTraceEvents);
-                    localStorage.setItem(_formTraceStorageRecord, JSON.stringify(_formTraceEventsToSave));
+            if (record_formtrace) {
+                eventsToSave_formtrace = localStorage.getItem(storageRecord_formtrace) ? JSON.parse(localStorage.getItem(storageRecord_formtrace)) : {};
+                eventsToSave_formtrace[pathNamePage_formtrace] = [];
+                events_formtrace.push(event);
+                if (keepVideo_formtrace) {
+                    eventsToSave_formtrace[pathNamePage_formtrace] = Object.assign(events_formtrace);
+                    localStorage.setItem(storageRecord_formtrace, JSON.stringify(eventsToSave_formtrace));
                 }
             }
         },
@@ -86,8 +84,9 @@ function formTraceStartRecord() {
 }
 
 addEventListener("submit", async (event) => {
+    event.preventDefault();
     const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
-    const termsText = document.getElementById(privacityInputId);
+    const termsText = document.getElementById(privacityInputId_formtrace);
 
     let alertMessage = "";
 
@@ -95,7 +94,7 @@ addEventListener("submit", async (event) => {
         alertMessage = `Formtrace coreg and redirect to ${hiddenFormTrace.value}`;
     }
 
-    if (_formTraceDebug) {
+    if (debug_formtrace) {
         alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
     }
 
@@ -110,14 +109,12 @@ addEventListener("submit", async (event) => {
         alert(alertMessage);
     }
 
-    event.preventDefault();
-
-    if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false') {
-        await tfaValidation(tfaTwilio, phoneInputId, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit, event);
-    } else if (blackList && blackList === 'true') {
-        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackListApi, saveOnSubmit, event);
+    if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
+        await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+    } else if (blackList_formtrace && blackList_formtrace === 'true') {
+        await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
     } else {
-        await saveRecording(saveOnSubmit, event);
+        await saveRecording(saveOnSubmit_formtrace, event);
     }
 });
 
@@ -127,18 +124,18 @@ function generateUUID() {
     return crypto.randomUUID();
 }
 
-async function formproofSaveRecordWithOnsubmitEvent(data) {
-    _formTraceSavingLoading = true;
-    _formTraceRecord = false;
+async function formTraceSaveRecordWithOnsubmitEvent(data) {
+    savingLoading_formtrace = true;
+    record_formtrace = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
-    const termsText = document.getElementById(privacityInputId);
+    const termsText = document.getElementById(privacityInputId_formtrace);
     if (termsText) {
         data['terms'] = termsText.innerText;
     }
 
     let formTraceIdValue;
 
-    if (recordingIdFromBrowser || guide) {
+    if (recordingIdFromBrowser || guide_formtrace) {
         formTraceIdValue = recordingIdFromBrowser || generateUUID();
         data['formTraceId'] = formTraceIdValue;
     }
@@ -149,20 +146,20 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo ? { [_formTracePathNamePage]: _formTraceEvents } : JSON.parse(localStorage.getItem(_formTraceStorageRecord));
-        const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
+        const eventsToSubmit = !keepVideo_formtrace ? { [pathNamePage_formtrace]: events_formtrace } : JSON.parse(localStorage.getItem(storageRecord_formtrace));
+        const status = !recordingIdFromBrowser && guide_formtrace ? "partial" : "completed";
 
         const dataSubmit = {
             form: data,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            token: _formTraceToken || '',
+            token: token_formtrace || '',
             status: status
         };
 
-        if (!recordingIdFromBrowser && guide) {
-            dataSubmit.provider = guide;
+        if (!recordingIdFromBrowser && guide_formtrace) {
+            dataSubmit.provider = guide_formtrace;
             dataSubmit.formTraceId = generateUUID();
         }
 
@@ -180,32 +177,32 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        if (callback) {
+        if (callback_formtrace) {
             test({ form: data, formProofResponse: responseAsJson2 });
         }
         return responseAsJson2;
     } catch (error) {
         console.error("Error al guardar la grabación:", error);
     } finally {
-        _formTraceSavingLoading = false;
-        if (keepVideo) {
-            localStorage.removeItem(_formTraceStorageRecord);
+        savingLoading_formtrace = false;
+        if (keepVideo_formtrace) {
+            localStorage.removeItem(storageRecord_formtrace);
         }
     }
 }
 
 async function formTraceSaveRecord(data = {}) {
-    _formTraceSavingLoading = true;
-    _formTraceRecord = false;
+    savingLoading_formtrace = true;
+    record_formtrace = false;
     console.log('formTraceSaveRecordWithOnsubmitEvent');
-    const termsText = document.getElementById(privacityInputId);
+    const termsText = document.getElementById(privacityInputId_formtrace);
     if (termsText) {
         data['terms'] = termsText.innerText;
     }
 
     let formTraceIdValue;
 
-    if (recordingIdFromBrowser || guide) {
+    if (recordingIdFromBrowser || guide_formtrace) {
         formTraceIdValue = recordingIdFromBrowser || generateUUID();
         data['formTraceId'] = formTraceIdValue;
     }
@@ -216,20 +213,20 @@ async function formTraceSaveRecord(data = {}) {
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
-        const eventsToSubmit = !keepVideo ? { [_formTracePathNamePage]: _formTraceEvents } : JSON.parse(localStorage.getItem(_formTraceStorageRecord));
-        const status = !recordingIdFromBrowser && guide ? "partial" : "completed";
+        const eventsToSubmit = !keepVideo_formtrace ? { [pathNamePage_formtrace]: events_formtrace } : JSON.parse(localStorage.getItem(storageRecord_formtrace));
+        const status = !recordingIdFromBrowser && guide_formtrace ? "partial" : "completed";
 
         const dataSubmit = {
             form: data,
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            token: _formTraceToken || '',
+            token: token_formtrace || '',
             status: status
         };
 
-        if (!recordingIdFromBrowser && guide) {
-            dataSubmit.provider = guide;
+        if (!recordingIdFromBrowser && guide_formtrace) {
+            dataSubmit.provider = guide_formtrace;
             dataSubmit.formTraceId = generateUUID();
         }
 
@@ -247,16 +244,16 @@ async function formTraceSaveRecord(data = {}) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        if (callback) {
+        if (callback_formtrace) {
             test({ form: data, formProofResponse: responseAsJson2 });
         }
         return responseAsJson2;
     } catch (error) {
         console.error("Error al guardar la grabación:", error);
     } finally {
-        _formTraceSavingLoading = false;
-        if (keepVideo) {
-            localStorage.removeItem(_formTraceStorageRecord);
+        savingLoading_formtrace = false;
+        if (keepVideo_formtrace) {
+            localStorage.removeItem(storageRecord_formtrace);
         }
     }
 }
