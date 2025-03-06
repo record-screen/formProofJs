@@ -8093,7 +8093,7 @@ let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
 let guide = ''
 let callback = ''
 let formTraceId = ''
-let _formTraceBaseApi = 'https://intelligent-code-qlrkx.ampt.app/api'
+let _formTraceBaseApi = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
