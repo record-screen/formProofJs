@@ -8094,7 +8094,7 @@ let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
 let debug_formtrace = ''
-let baseApi_formtrace = 'https://splendid-binary-uynxj.app/api'
+let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
