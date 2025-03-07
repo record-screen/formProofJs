@@ -124,7 +124,7 @@ function generateUUID() {
     return crypto.randomUUID();
 }
 
-async function formTraceSaveRecordWitrhOnsubmitEvent(data) {
+async function formTraceSaveRecordWithOnsubmitEvent(data) {
     savingLoading_formtrace = true;
     record_formtrace = false;
     const termsText = document.getElementById(privacityInputId_formtrace);

@@ -8139,7 +8139,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.4 initialized');
+    console.log('formTrace v.1.0.5 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
@@ -8205,7 +8205,7 @@ function generateUUID() {
     return crypto.randomUUID();
 }
 
-async function formTraceSaveRecordWitrhOnsubmitEvent(data) {
+async function formTraceSaveRecordWithOnsubmitEvent(data) {
     savingLoading_formtrace = true;
     record_formtrace = false;
     const termsText = document.getElementById(privacityInputId_formtrace);
@@ -8574,7 +8574,7 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
-        const recordKey = await formTraceSaveRecordWitrhOnsubmitEvent(data);
+        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
         if (debug_formtrace){
             console.log('Success formTraceId:', recordKey);
         }
