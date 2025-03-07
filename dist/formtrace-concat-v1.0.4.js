@@ -8102,6 +8102,7 @@ let esp = false;
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
 
+
 if (recordingIdFromBrowser) {
     const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
     if (hiddenFormTraceInputId) {
@@ -8138,7 +8139,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.3 initialized');
+    console.log('formTrace v.1.0.4 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
@@ -8166,7 +8167,26 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!esp){
             event.stopPropagation();
         }
-        console.log("Form submission blocked:", event.target);
+
+        const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
+        const termsText = document.getElementById(privacityInputId_formtrace);
+
+
+        if (debug_formtrace){
+            let alertMessage = "Formtrace Submit Intercepted:";
+
+            if (hiddenFormTrace?.value) {
+                alertMessage += `redirect: ${hiddenFormTrace.value}`;
+            }
+
+            if (termsText) {
+                alertMessage += `terms detected @ ${privacityInputId_formtrace}`;
+            }
+
+            alert(alertMessage);
+            console.log("Form submission blocked:", event.target);
+        }
+
 
         if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
             await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
@@ -8185,10 +8205,9 @@ function generateUUID() {
     return crypto.randomUUID();
 }
 
-async function formTraceSaveRecordWithOnsubmitEvent(data) {
+async function formTraceSaveRecordWitrhOnsubmitEvent(data) {
     savingLoading_formtrace = true;
     record_formtrace = false;
-    console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId_formtrace);
     if (termsText) {
         data['terms'] = termsText.innerText;
@@ -8228,8 +8247,6 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         if (formTraceIdValue) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
-
-        alert("Form submission blocked")
 
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
@@ -8255,7 +8272,6 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
 async function formTraceSaveRecord(data = {}) {
     savingLoading_formtrace = true;
     record_formtrace = false;
-    console.log('formTraceSaveRecordWithOnsubmitEvent');
     const termsText = document.getElementById(privacityInputId_formtrace);
     if (termsText) {
         data['terms'] = termsText.innerText;
@@ -8294,8 +8310,6 @@ async function formTraceSaveRecord(data = {}) {
         if (formTraceIdValue) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
-
-        alert("Form submission blocked")
 
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
@@ -8548,7 +8562,9 @@ function formatPhoneNumber(phone) {
 
 async function saveRecording(saveOnSubmit, event) {
     if (saveOnSubmit) {
-        console.log('formTrace#saving on submit');
+        if (debug_formtrace){
+            console.log('formTrace#saving on submit');
+        }
         if (!event.target || !(event.target instanceof HTMLFormElement)) {
             console.error("Invalid form element");
             return;
@@ -8558,9 +8574,10 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
-        console.log('Data', data)
-        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
-        console.log('Record key: ', recordKey);
+        const recordKey = await formTaceSaveRecordWithOnsubmitEvent(data);
+        if (debug_formtrace){
+            console.log('Success formTraceId:', recordKey);
+        }
     }
 }
 
