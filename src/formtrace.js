@@ -15,6 +15,8 @@ let formTraceId = ''
 let debug_formtrace = ''
 let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
+let epd = false;
+let esp = false;
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
@@ -35,7 +37,9 @@ if (scriptElement) {
     callback_formtrace = urlParams.get("callback");
     guide_formtrace = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
-    debug_formtrace = urlParams.get("debug") ? urlParams.get("debug") : false;
+    epd = urlParams.get("epd") ? urlParams.get("epd") : false;
+    esp = urlParams.get("esp") ? urlParams.get("esp") : false;
+    tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList_formtrace = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -59,7 +63,6 @@ if (automaticRecord_formtrace) {
     } else if (debug_formtrace) {
         alert("Formtrace loaded normal");
     }
-
     formTraceStartRecord();
 }
 
@@ -76,33 +79,13 @@ function formTraceStartRecord() {
 
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+        if (!epd){
+            event.preventDefault();
+        }
+        if (!esp){
+            event.stopPropagation();
+        }
         console.log("Form submission blocked:", event.target);
-
-        const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
-        const termsText = document.getElementById(privacityInputId_formtrace);
-
-        let alertMessage = "";
-
-        if (hiddenFormTrace?.value) {
-            alertMessage = `Formtrace coreg and redirect to ${hiddenFormTrace.value}`;
-        }
-
-        if (debug_formtrace) {
-            alertMessage = alertMessage ? `${alertMessage} and formtrace submit event` : "Formtrace submit event";
-        }
-
-        if (termsText) {
-            const termsContent = termsText.innerText.trim();
-            if (termsContent) {
-                alertMessage = alertMessage ? `${alertMessage} | Terms: ${termsContent}` : `Terms: ${termsContent}`;
-            }
-        }
-
-        if (alertMessage) {
-            alert(alertMessage);
-        }
 
         if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
             await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
@@ -165,17 +148,17 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
 
+        alert("Form submission blocked")
+
+        const response = await saveRecordings(dataSubmit);
+        const responseAsJson2 = await response.json();
+
         const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
             window.location.href = redirectUrl.toString();
         }
-
-        alert("Form submission blocked")
-
-        const response = await saveRecordings(dataSubmit);
-        const responseAsJson2 = await response.json();
 
         if (callback_formtrace) {
             test({ form: data, formProofResponse: responseAsJson2 });
@@ -231,15 +214,17 @@ async function formTraceSaveRecord(data = {}) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
 
+        alert("Form submission blocked")
+
+        const response = await saveRecordings(dataSubmit);
+        const responseAsJson2 = await response.json();
+
         const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
             window.location.href = redirectUrl.toString();
         }
-
-        const response = await saveRecordings(dataSubmit);
-        const responseAsJson2 = await response.json();
 
         if (callback_formtrace) {
             test({ form: data, formProofResponse: responseAsJson2 });
