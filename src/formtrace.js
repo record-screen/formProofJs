@@ -38,6 +38,7 @@ if (scriptElement) {
     callback_formtrace = urlParams.get("callback");
     guide_formtrace = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
+    debug_formtrace = urlParams.get("debug") ? urlParams.get("debug") : false;
     epd = urlParams.get("epd") ? urlParams.get("epd") : false;
     esp = urlParams.get("esp") ? urlParams.get("esp") : false;
     tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
