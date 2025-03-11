@@ -8089,15 +8089,15 @@ let tfaTwilio_formtrace = false;
 let blackList_formtrace = false;
 let phoneInputId_formtrace = ''
 let privacityInputId_formtrace = ''
-let hiddenFormTraceRedirect = 'hiddenFormTraceRedirect'
+let hiddenFormTraceRedirect = 'redirectId'
 let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
 let debug_formtrace = ''
-let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
+let baseApi_formtrace = 'https://intelligent-code-qlrkx.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
-let epd = false;
-let esp = false;
+let epd_formtrace = '';
+let esp_formtrace = '';
 
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
@@ -8120,8 +8120,8 @@ if (scriptElement) {
     guide_formtrace = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
     debug_formtrace = urlParams.get("debug") ? urlParams.get("debug") : false;
-    epd = urlParams.get("epd") ? urlParams.get("epd") : false;
-    esp = urlParams.get("esp") ? urlParams.get("esp") : false;
+    epd_formtrace = urlParams.get("epd")
+    esp_formtrace = urlParams.get("esp")
     tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
@@ -8140,7 +8140,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.6 initialized');
+    console.log('formTrace v.1.0.7 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
@@ -8162,44 +8162,50 @@ function formTraceStartRecord() {
 
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
-        if (!epd){
+
+        if (epd_formtrace === 'false') {
             event.preventDefault();
         }
-        if (!esp){
+
+
+        if (esp_formtrace === 'true') {
+            console.log(esp_formtrace);
             event.stopPropagation();
         }
 
         const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
         const termsText = document.getElementById(privacityInputId_formtrace);
 
-
-        if (debug_formtrace){
-            let alertMessage = "Formtrace Submit Intercepted:";
+        if (debug_formtrace) {
+            let alertMessage = "Formtrace Submit Intercepted";
 
             if (hiddenFormTrace?.value) {
-                alertMessage += `redirect: ${hiddenFormTrace.value}`;
+                alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
+            } else {
+                alertMessage += ` | no redirect`;
             }
 
             if (termsText) {
-                alertMessage += `terms detected @ ${privacityInputId_formtrace}`;
+                alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
+            } else {
+                alertMessage += ` | no terms detected`;
             }
 
             alert(alertMessage);
             console.log("Form submission blocked:", event.target);
         }
 
-
         if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
             await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
-        } else if (blackList_formtrace && blackList_formtrace === 'true') {
+        }
+        else if (blackList_formtrace && blackList_formtrace === 'true') {
             await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
-        } else {
+        }
+        else {
             await saveRecording(saveOnSubmit_formtrace, event);
         }
-
     }, true);
 });
-
 
 
 function generateUUID() {
