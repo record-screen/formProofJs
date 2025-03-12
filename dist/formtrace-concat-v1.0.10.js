@@ -8089,7 +8089,6 @@ let tfaTwilio_formtrace = false;
 let blackList_formtrace = false;
 let phoneInputId_formtrace = ''
 let privacityInputId_formtrace = ''
-let hiddenFormTraceRedirect = 'redirectId'
 let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
@@ -8098,16 +8097,14 @@ let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
-
+let redirectId_formtrace = '';
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
 
 
-if (recordingIdFromBrowser) {
-    const hiddenFormTraceInputId = document.getElementById("hiddenFormTraceId");
-    if (hiddenFormTraceInputId) {
-        hiddenFormTraceInputId.value = recordingIdFromBrowser;
-    }
+const hiddenFormTraceInputId = document.getElementById("redirectId");
+if (hiddenFormTraceInputId) {
+    hiddenFormTraceInputId.value = recordingIdFromBrowser;
 }
 
 
@@ -8127,6 +8124,7 @@ if (scriptElement) {
     tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList_formtrace = urlParams.get("blackList") ? urlParams.get("blackList") : false;
     privacityInputId_formtrace = urlParams.get("privacityId");
+    redirectId_formtrace = urlParams.get("redirectId");
     saveOnSubmit_formtrace = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
@@ -8140,11 +8138,24 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.0.8 initialized');
+    console.log('formTrace v.1.0.10 initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace) {
-        alert("Formtrace loaded normal");
+        let alertMessage = "Formtrace loaded normal";
+        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+        const termsText = document.getElementById(privacityInputId_formtrace);
+        if (hiddenFormTrace?.value) {
+            alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
+        } else {
+            alertMessage += ` | no redirect`;
+        }
+        if (termsText) {
+            alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
+        } else {
+            alertMessage += ` | no terms detected`;
+        }
+        alert(alertMessage);
     }
     formTraceStartRecord();
 }
@@ -8163,7 +8174,7 @@ function formTraceStartRecord() {
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
 
-        if (epd_formtrace === 'false') {
+        if (epd_formtrace === 'true') {
             event.preventDefault();
         }
 
@@ -8173,7 +8184,7 @@ document.addEventListener("DOMContentLoaded", () => {
             event.stopPropagation();
         }
 
-        const hiddenFormTrace = document.getElementById(hiddenFormTraceRedirect);
+        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
         const termsText = document.getElementById(privacityInputId_formtrace);
 
         if (debug_formtrace) {
@@ -8258,7 +8269,7 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
+        const hiddenFormTraceInput = document.getElementById(redirectId_formtrace);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
@@ -8321,7 +8332,7 @@ async function formTraceSaveRecord(data = {}) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        const hiddenFormTraceInput = document.getElementById(hiddenFormTraceRedirect);
+        const hiddenFormTraceInput = document.getElementById(redirectId_formtrace);
         if (hiddenFormTraceInput?.value) {
             const redirectUrl = new URL(hiddenFormTraceInput.value);
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
