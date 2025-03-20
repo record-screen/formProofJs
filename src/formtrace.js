@@ -94,13 +94,11 @@ function formTraceStartRecord() {
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
 
-        if (epd_formtrace === 'true') {
+        if (epd_formtrace && epd_formtrace === 'true') {
             event.preventDefault();
         }
 
-
-        if (esp_formtrace === 'true') {
-            console.log(esp_formtrace);
+        if (esp_formtrace && esp_formtrace === 'true') {
             event.stopPropagation();
         }
 
@@ -126,19 +124,19 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Form submission blocked:", event.target);
         }
 
-        if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
-            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
-        }
-        else if (blackList_formtrace && blackList_formtrace === 'true') {
-            await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
-        }
-        else {
-            await saveRecording(saveOnSubmit_formtrace, event);
+        if (esp_formtrace === 'false') {
+            if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
+                await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+            }
+            else if (blackList_formtrace && blackList_formtrace === 'true') {
+                await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
+            }
+            else {
+                await saveRecording(saveOnSubmit_formtrace, event);
+            }
         }
     }, true);
 });
-
-
 function generateUUID() {
     return crypto.randomUUID();
 }
@@ -153,10 +151,13 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
 
     let formTraceIdValue;
 
-    if (recordingIdFromBrowser || guide_formtrace) {
-        formTraceIdValue = recordingIdFromBrowser || generateUUID();
-        data['formTraceId'] = formTraceIdValue;
+    if (recordingIdFromBrowser) {
+        formTraceIdValue = recordingIdFromBrowser;
+    } else if (guide_formtrace || redirectId_formtrace) {
+        formTraceIdValue = generateUUID();
     }
+
+    data['formTraceId'] = formTraceIdValue;
 
     const userAgent = window.navigator.userAgent;
 
@@ -165,8 +166,9 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
         const eventsToSubmit = events_formtrace
-        const status = !recordingIdFromBrowser && guide_formtrace ? "partial" : "completed";
-
+        const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
+            redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
+                "completed";
 
         const dataSubmit = {
             form: data,
@@ -177,9 +179,9 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
             status: status
         };
 
-        if (!recordingIdFromBrowser && guide_formtrace) {
-            dataSubmit.provider = guide_formtrace;
-            dataSubmit.formTraceId = generateUUID();
+        if (!recordingIdFromBrowser && (guide_formtrace || redirectId_formtrace)) {
+            dataSubmit.provider = guide_formtrace
+            dataSubmit.formTraceId = formTraceIdValue;
         }
 
         if (formTraceIdValue) {
@@ -206,7 +208,6 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         savingLoading_formtrace = false;
     }
 }
-
 async function formTraceSaveRecord(data = {}) {
     savingLoading_formtrace = true;
     record_formtrace = false;
@@ -217,10 +218,15 @@ async function formTraceSaveRecord(data = {}) {
 
     let formTraceIdValue;
 
-    if (recordingIdFromBrowser || guide_formtrace) {
-        formTraceIdValue = recordingIdFromBrowser || generateUUID();
-        data['formTraceId'] = formTraceIdValue;
+    if (recordingIdFromBrowser) {
+        formTraceIdValue = recordingIdFromBrowser;
+    } else if (guide_formtrace || redirectId_formtrace) {
+        formTraceIdValue = generateUUID();
+    } else {
+        formTraceIdValue = generateUUID();
     }
+
+    data['formTraceId'] = formTraceIdValue;
 
     const userAgent = window.navigator.userAgent;
 
@@ -240,9 +246,9 @@ async function formTraceSaveRecord(data = {}) {
             status: status
         };
 
-        if (!recordingIdFromBrowser && guide_formtrace) {
-            dataSubmit.provider = guide_formtrace;
-            dataSubmit.formTraceId = generateUUID();
+        if (!recordingIdFromBrowser && (guide_formtrace || redirectId_formtrace)) {
+            dataSubmit.provider = guide_formtrace
+            dataSubmit.formTraceId = formTraceIdValue;
         }
 
         if (formTraceIdValue) {
