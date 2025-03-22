@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
             }
             else {
-                await saveRcording(saveOnSubmit_formtrace, event);
+                await saveRecording(saveOnSubmit_formtrace, event);
             }
         }
     }, true);
