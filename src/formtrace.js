@@ -191,11 +191,12 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        const hiddenFormTraceInput = document.getElementById(redirectId_formtrace);
-        console.log("inputHidden", hiddenFormTraceInput)
-        if (hiddenFormTraceInput?.value) {
-            const redirectUrl = new URL(hiddenFormTraceInput.value);
-            console.log("redirectUrl", hiddenFormTraceInput.value)
+        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+
+        console.log("inputHidden", hiddenFormTrace)
+        if (hiddenFormTrace?.value) {
+            const redirectUrl = new URL(hiddenFormTrace.value);
+            console.log("redirectUrl", hiddenFormTrace.value)
 
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
             console.log("go", redirectUrl)
