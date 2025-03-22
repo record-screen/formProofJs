@@ -1,6 +1,6 @@
 async function saveRecording(saveOnSubmit, event) {
     if (saveOnSubmit) {
-        if (debug_formtrace){
+        if (debug_formtrace && debug_formtrace === 'true'){
             console.log('formTrace#saving on submit');
         }
         if (!event.target || !(event.target instanceof HTMLFormElement)) {
@@ -13,7 +13,7 @@ async function saveRecording(saveOnSubmit, event) {
             data[key] = value;
         }
         const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
-        if (debug_formtrace){
+        if (debug_formtrace && debug_formtrace === 'true'){
             console.log('Success formTraceId:', recordKey);
         }
     }

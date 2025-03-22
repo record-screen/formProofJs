@@ -60,7 +60,7 @@ if (automaticRecord_formtrace) {
     console.log('formTrace v.__VERSION__ initialized');
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
-    } else if (debug_formtrace) {
+    } else if (debug_formtrace && debug_formtrace === 'true') {
         let alertMessage = "Formtrace loaded normal";
         const hiddenFormTrace = document.getElementById(redirectId_formtrace);
         const termsText = document.getElementById(privacityInputId_formtrace);
@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const hiddenFormTrace = document.getElementById(redirectId_formtrace);
         const termsText = document.getElementById(privacityInputId_formtrace);
 
-        if (debug_formtrace) {
+        if (debug_formtrace && debug_formtrace === 'true') {
             let alertMessage = "Formtrace Submit Intercepted";
 
             if (hiddenFormTrace?.value) {
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
             }
             else {
-                await saveRecording(saveOnSubmit_formtrace, event);
+                await saveRcording(saveOnSubmit_formtrace, event);
             }
         }
     }, true);
