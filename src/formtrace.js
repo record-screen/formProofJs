@@ -1,6 +1,6 @@
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
-let token = ''
+let token_formtrace = ''
 let automaticRecord_formtrace = true;
 let saveOnSubmit_formtrace = true;
 let keepVideo_formtrace = false;
@@ -11,7 +11,7 @@ let privacityInputId_formtrace = ''
 let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
-let debug_formtrace = ''
+let debug_formtrace = false;
 let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
@@ -19,6 +19,7 @@ let esp_formtrace = '';
 let redirectId_formtrace = '';
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
+let redirectValue_formtrace = '';
 
 
 const hiddenFormTraceInputId = document.getElementById("redirectId");
@@ -58,17 +59,16 @@ const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
     console.log('formTrace v.__VERSION__ initialized');
+    const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+    if (hiddenFormTrace?.value) {
+        redirectValue_formtrace = hiddenFormTrace.value || '';
+    }
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
     } else if (debug_formtrace && debug_formtrace === 'true') {
         let alertMessage = "Formtrace loaded normal";
-        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+        alertMessage += redirectValue_formtrace ? ` | redirect: ${redirectValue_formtrace}` : ` | no redirect`;
         const termsText = document.getElementById(privacityInputId_formtrace);
-        if (hiddenFormTrace?.value) {
-            alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
-        } else {
-            alertMessage += ` | no redirect`;
-        }
         if (termsText) {
             alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
         } else {
@@ -191,16 +191,9 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         const response = await saveRecordings(dataSubmit);
         const responseAsJson2 = await response.json();
 
-        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
-
-        console.log("inputHidden", hiddenFormTrace)
-        if (hiddenFormTrace?.value) {
-            const redirectUrl = new URL(hiddenFormTrace.value);
-            console.log("redirectUrl", hiddenFormTrace.value)
-
+        if (redirectValue_formtrace !== "") {
+            const redirectUrl = new URL(redirectValue_formtrace);
             redirectUrl.searchParams.set('formTraceId', formTraceIdValue);
-            console.log("go", redirectUrl)
-
             window.location.href = redirectUrl.toString();
         }
 
