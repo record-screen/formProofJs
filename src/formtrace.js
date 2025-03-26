@@ -1,3 +1,10 @@
+function parseBoolean(value) {
+    if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+    }
+    return Boolean(value);
+}
+
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
 let token_formtrace = ''
@@ -36,13 +43,12 @@ if (scriptElement) {
     callback_formtrace = urlParams.get("callback");
     guide_formtrace = urlParams.get("guide")
     formTraceId = recordingIdFromBrowser;
-    debug_formtrace = urlParams.get("debug") ? urlParams.get("debug") : false;
-    epd_formtrace = urlParams.get("epd")
-    esp_formtrace = urlParams.get("esp")
-    tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
+    debug_formtrace = parseBoolean(urlParams.get("debug"));
+    epd_formtrace = parseBoolean(urlParams.get("epd"))
+    esp_formtrace = parseBoolean(urlParams.get("esp"))
+    tfaTwilio_formtrace = parseBoolean(urlParams.get("tfaTwilio"));
     keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
-    tfaTwilio_formtrace = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
-    blackList_formtrace = urlParams.get("blackList") ? urlParams.get("blackList") : false;
+    blackList_formtrace = parseBoolean(urlParams.get("blackList"));
     privacityInputId_formtrace = urlParams.get("privacityId");
     redirectId_formtrace = urlParams.get("redirectId");
     saveOnSubmit_formtrace = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
@@ -65,7 +71,7 @@ if (automaticRecord_formtrace) {
     }
     if (debug_formtrace && guide_formtrace) {
         alert("Formtrace loaded coreg");
-    } else if (debug_formtrace && debug_formtrace === 'true') {
+    } else if (debug_formtrace && debug_formtrace === true) {
         let alertMessage = "Formtrace loaded normal";
         alertMessage += redirectValue_formtrace ? ` | redirect: ${redirectValue_formtrace}` : ` | no redirect`;
         const termsText = document.getElementById(privacityInputId_formtrace);
@@ -94,18 +100,18 @@ function formTraceStartRecord() {
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
 
-        if (epd_formtrace && epd_formtrace === 'true') {
+        if (epd_formtrace && epd_formtrace === true) {
             event.preventDefault();
         }
 
-        if (esp_formtrace && esp_formtrace === 'true') {
+        if (esp_formtrace && esp_formtrace === true) {
             event.stopPropagation();
         }
 
         const hiddenFormTrace = document.getElementById(redirectId_formtrace);
         const termsText = document.getElementById(privacityInputId_formtrace);
 
-        if (debug_formtrace && debug_formtrace === 'true') {
+        if (debug_formtrace && debug_formtrace === true) {
             let alertMessage = "Formtrace Submit Intercepted";
 
             if (hiddenFormTrace?.value) {
@@ -124,11 +130,11 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Form submission blocked:", event.target);
         }
 
-        if (esp_formtrace === 'false') {
-            if (tfaTwilio_formtrace && tfaTwilio_formtrace === 'true' && blackList_formtrace === 'false') {
+        if (esp_formtrace === false) {
+            if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
                 await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
             }
-            else if (blackList_formtrace && blackList_formtrace === 'true') {
+            else if (blackList_formtrace && blackList_formtrace === true) {
                 await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
             }
             else {
