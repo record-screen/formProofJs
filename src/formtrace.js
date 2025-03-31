@@ -143,8 +143,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, true);
 });
+
 function generateUUID() {
     return crypto.randomUUID();
+}
+
+function createHiddenInput(id, value) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.id = id;
+    input.name = id;
+    input.value = value;
+    return input;
 }
 
 async function formTraceSaveRecordWithOnsubmitEvent(data) {
@@ -155,15 +165,13 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         data['terms'] = termsText.innerText;
     }
 
-    let formTraceIdValue;
+    let formTraceIdValue = recordingIdFromBrowser || ((guide_formtrace || redirectId_formtrace) && generateUUID());
+    const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
 
-    if (recordingIdFromBrowser) {
-        formTraceIdValue = recordingIdFromBrowser;
-    } else if (guide_formtrace || redirectId_formtrace) {
-        formTraceIdValue = generateUUID();
+    if (formTraceIdValue && searchForm) {
+        searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
+        data['formTraceId'] = formTraceIdValue;
     }
-
-    data['formTraceId'] = formTraceIdValue;
 
     const userAgent = window.navigator.userAgent;
 
@@ -213,6 +221,8 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         savingLoading_formtrace = false;
     }
 }
+
+
 async function formTraceSaveRecord(data = {}) {
     savingLoading_formtrace = true;
     record_formtrace = false;
@@ -221,17 +231,13 @@ async function formTraceSaveRecord(data = {}) {
         data['terms'] = termsText.innerText;
     }
 
-    let formTraceIdValue;
+    let formTraceIdValue = recordingIdFromBrowser || ((guide_formtrace || redirectId_formtrace) && generateUUID());
+    const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
 
-    if (recordingIdFromBrowser) {
-        formTraceIdValue = recordingIdFromBrowser;
-    } else if (guide_formtrace || redirectId_formtrace) {
-        formTraceIdValue = generateUUID();
-    } else {
-        formTraceIdValue = generateUUID();
+    if (formTraceIdValue && searchForm) {
+        searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
+        data['formTraceId'] = formTraceIdValue;
     }
-
-    data['formTraceId'] = formTraceIdValue;
 
     const userAgent = window.navigator.userAgent;
 
@@ -253,10 +259,6 @@ async function formTraceSaveRecord(data = {}) {
 
         if (!recordingIdFromBrowser && (guide_formtrace || redirectId_formtrace)) {
             dataSubmit.provider = guide_formtrace
-            dataSubmit.formTraceId = formTraceIdValue;
-        }
-
-        if (formTraceIdValue) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
 

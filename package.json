@@ -1,6 +1,6 @@
 {
   "name": "liveprintjs",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "Script for record your screen",
   "main": "src/index.js",
   "scripts": {
