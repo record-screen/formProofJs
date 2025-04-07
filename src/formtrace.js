@@ -165,7 +165,16 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         data['terms'] = termsText.innerText;
     }
 
-    let formTraceIdValue = recordingIdFromBrowser || ((guide_formtrace || redirectId_formtrace) && generateUUID());
+    let formTraceIdValue;
+
+    if (recordingIdFromBrowser) {
+        formTraceIdValue = recordingIdFromBrowser;
+    } else if (guide_formtrace || redirectId_formtrace) {
+        formTraceIdValue = generateUUID();
+    } else {
+        formTraceIdValue = generateUUID();
+    }
+
     const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
 
     if (formTraceIdValue && searchForm) {
