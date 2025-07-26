@@ -1,12 +1,13 @@
 {
   "name": "liveprintjs",
-  "version": "1.0.21",
+  "version": "1.0.23",
   "description": "Script for record your screen",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildStaging": "gulp buildStaging && git add . && git commit -m 'Build formproof script'",
     "buildProduction": "gulp buildProduction && git add . && git commit -m 'Build formproof script'",
+    "buildConvex": "gulp buildLocal",
     "push-changes": "git push"
   },
   "repository": {
