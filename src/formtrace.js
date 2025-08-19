@@ -315,7 +315,7 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            clientToken: token_formtrace || '',
+            token: token_formtrace || '',
             status: status
         };
 
@@ -383,7 +383,7 @@ async function formTraceSaveRecord(data = {}) {
             events: JSON.stringify(eventsToSubmit),
             clientIp,
             userAgent,
-            clientToken: token_formtrace || '',
+            token: token_formtrace || '',
             status: status
         };
 
