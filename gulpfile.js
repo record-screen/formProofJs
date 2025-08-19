@@ -15,8 +15,8 @@ function installDependencies(cb) {
 
 const formProofEnvironmentApis = {
     local: 'https://inspired-src-stvyv.ampt.app/api',
-    staging: 'https://splendid-binary-uynxj.ampt.app/api',
-    production: 'https://intelligent-src-r12j9.ampt.app/api'
+    staging: 'https://inspired-src-stvyv.ampt.app/api',
+    production: 'https://inspired-src-stvyv.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
