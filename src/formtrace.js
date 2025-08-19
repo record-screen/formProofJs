@@ -19,7 +19,7 @@ let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
 let debug_formtrace = false;
-let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
+let baseApi_formtrace = 'https://inspired-src-stvyv.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
@@ -268,6 +268,8 @@ function createHiddenInput(id, value) {
 }
 
 async function formTraceSaveRecordWithOnsubmitEvent(data) {
+  console.log("🔍 INICIO - Datos recibidos:", data);
+  console.log("🔍 Token disponible:", token_formtrace);
     savingLoading_formtrace = true;
     record_formtrace = false;
     const termsText = document.getElementById(privacityInputId_formtrace);
@@ -279,10 +281,13 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
 
     if (recordingIdFromBrowser) {
         formTraceIdValue = recordingIdFromBrowser;
+    console.log("🔄 Usando ID existente:", formTraceIdValue);
     } else if (guide_formtrace || redirectId_formtrace) {
         formTraceIdValue = generateUUID();
+    console.log("�� Generando nuevo ID:", formTraceIdValue);
     } else {
         formTraceIdValue = generateUUID();
+    console.log("🆔 Generando ID por defecto:", formTraceIdValue);
     }
 
     const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
@@ -295,10 +300,12 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
     const userAgent = window.navigator.userAgent;
 
     try {
+    console.log("🌐 Obteniendo IP del cliente...");
         const responseIp = await fetch("https://api.ipify.org/?format=json");
         const responseAsJson = await responseIp.json();
         const clientIp = responseAsJson?.ip;
         const eventsToSubmit = events_formtrace
+    console.log("🎬 Eventos grabados:", eventsToSubmit.length);
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
                 "completed";
@@ -320,9 +327,13 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         if (formTraceIdValue) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
+    console.log("📤 Datos a enviar a la API:", dataSubmit);
+    console.log("🎯 URL de destino:", formTraceApiSave);
 
         const response = await saveRecordings(dataSubmit);
+    console.log("✅ Respuesta de la API:", response);
         const responseAsJson2 = await response.json();
+    console.log("�� Datos de respuesta:", responseAsJson2);
 
         if (redirectValue_formtrace !== "") {
             const redirectUrl = new URL(redirectValue_formtrace);

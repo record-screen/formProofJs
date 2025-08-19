@@ -14,9 +14,9 @@ function installDependencies(cb) {
 }
 
 const formProofEnvironmentApis = {
-    local: 'https://bright-api-2n99o.ampt.app/api',
-    staging: 'https://splendid-binary-uynxj.ampt.app/api',
-    production: 'https://intelligent-src-r12j9.ampt.app/api'
+    local: 'https://inspired-src-stvyv.ampt.app/api',
+    staging: 'https://inspired-src-stvyv.ampt.app/api',
+    production: 'https://inspired-src-stvyv.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
@@ -76,6 +76,7 @@ function replaceTemplate() {
 exports.build = build;
 exports.buildStaging = buildStaging;
 exports.buildProduction = buildProduction;
+exports.buildLocal = buildLocal;
 exports.buildBlackList = buildBlackList;
 exports.watch = watch;
 exports.watchBuildBlackList = watchBuildBlackList;
