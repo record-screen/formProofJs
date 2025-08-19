@@ -359,7 +359,20 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
 
     const response = await saveRecordings(dataSubmit);
     console.log("✅ Respuesta de la API:", response);
-    const responseAsJson2 = await response.json();
+    // Verificar si la respuesta tiene contenido
+    if (response.ok) {
+      try {
+        const responseAsJson2 = await response.json();
+        console.log(" Datos de respuesta:", responseAsJson2);
+      } catch (jsonError) {
+        console.log(
+            "⚠️ Respuesta vacía o no-JSON:",
+            response.status,
+            response.statusText
+        );
+        // Continuar sin procesar JSON
+      }
+    }
     console.log("�� Datos de respuesta:", responseAsJson2);
 
     if (redirectValue_formtrace !== "") {
