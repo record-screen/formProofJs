@@ -6,7 +6,7 @@ function parseBoolean(value) {
 }
 
 // Reading query params
-const scriptElement = document.getElementById("formproofScript");
+const formtraceScriptElement = document.getElementById("formproofScript");
 let token_formtrace = ''
 let automaticRecord_formtrace = true;
 let saveOnSubmit_formtrace = true;
@@ -35,8 +35,8 @@ if (hiddenFormTraceInputId) {
 }
 
 
-if (scriptElement) {
-    const scriptSrc = scriptElement.getAttribute("src");
+if (formtraceScriptElement) {
+    const scriptSrc = formtraceScriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     token_formtrace = urlParams.get("token");
     phoneInputId_formtrace = urlParams.get("phoneInputId");
@@ -97,114 +97,21 @@ function formTraceStartRecord() {
     });
 }
 
-// document.addEventListener("DOMContentLoaded", () => {
-//     document.addEventListener("submit", async (event) => {
-//
-//         if (epd_formtrace && epd_formtrace === true) {
-//             event.preventDefault();
-//         }
-//
-//         if (esp_formtrace && esp_formtrace === true) {
-//             event.stopPropagation();
-//         }
-//
-//         const hiddenFormTrace = document.getElementById(redirectId_formtrace);
-//         const termsText = document.getElementById(privacityInputId_formtrace);
-//
-//         if (debug_formtrace && debug_formtrace === true) {
-//             let alertMessage = "Formtrace Submit Intercepted";
-//
-//             if (hiddenFormTrace?.value) {
-//                 alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
-//             } else {
-//                 alertMessage += ` | no redirect`;
-//             }
-//
-//             if (termsText) {
-//                 alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
-//             } else {
-//                 alertMessage += ` | no terms detected`;
-//             }
-//
-//             alert(alertMessage);
-//             console.log("Form submission blocked:", event.target);
-//         }
-//
-//         if (esp_formtrace === false) {
-//             if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
-//                 await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
-//             }
-//             else if (blackList_formtrace && blackList_formtrace === true) {
-//                 await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
-//             }
-//             else {
-//                 await saveRecording(saveOnSubmit_formtrace, event);
-//             }
-//         }
-//     }, true);
-// });
-
-
-let _ft_allowSubmit_once = false;
-
-async function _ft_runAsyncPipeline(evt) {
-    // mirror your existing branching
-    if (esp_formtrace === false) {
-        if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
-            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, evt);
-        } else if (blackList_formtrace && blackList_formtrace === true) {
-            await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, evt);
-        } else {
-            await saveRecording(saveOnSubmit_formtrace, evt); // alias added below
-        }
-    }
-}
-
-function _ft_resumeSubmit(eOrForm, submitter) {
-    console.log('_ft_resumeSubmit');
-    const form = eOrForm?.target || eOrForm;
-    const btn = submitter ?? eOrForm?.submitter;
-
-    _ft_allowSubmit_once = true;
-
-    if (btn && typeof form.requestSubmit === 'function') {
-        // replays a real submit with the same button context (keeps validation & server OnClick)
-        form.requestSubmit(btn);
-        return;
-    }
-
-    // Fallbacks
-    const evTarget = document.getElementById('__EVENTTARGET')?.value || null;
-    const evArg = document.getElementById('__EVENTARGUMENT')?.value || '';
-    if (evTarget && typeof window.__doPostBack === 'function') {
-        window.__doPostBack(evTarget, evArg);
-    } else if (btn?.name) {
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = btn.name;
-        hidden.value = btn.value || '1';
-        form.appendChild(hidden);
-        form.submit();
-    } else {
-        form.submit();
-    }
-}
-
-
-
 document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("submit", async (event) => {
-        console.log('init submit')
-        // let the resumed/native submit through once (prevents loops)
-        if (_ft_allowSubmit_once) return;
 
-        if (epd_formtrace && epd_formtrace === true) event.preventDefault();
-        if (esp_formtrace && esp_formtrace === true) event.stopPropagation();
+        if (epd_formtrace && epd_formtrace === true) {
+            event.preventDefault();
+        }
+
+        if (esp_formtrace && esp_formtrace === true) {
+            event.stopPropagation();
+        }
+
+        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+        const termsText = document.getElementById(privacityInputId_formtrace);
 
         if (debug_formtrace && debug_formtrace === true) {
-            const hiddenFormTrace = document.getElementById(redirectId_formtrace);
-            const termsText = document.getElementById(privacityInputId_formtrace);
-
             let alertMessage = "Formtrace Submit Intercepted";
 
             if (hiddenFormTrace?.value) {
@@ -212,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 alertMessage += ` | no redirect`;
             }
+
             if (termsText) {
                 alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
             } else {
@@ -222,37 +130,19 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Form submission blocked:", event.target);
         }
 
-        // run your async pipeline (TFA / blacklist / save)
-        console.log('run your async pipeline');
-        await _ft_runAsyncPipeline(event);
-
-        // if you didn't redirect inside your save, resume the submit so server OnClick fires
-        if (epd_formtrace && epd_formtrace === true) {
-            _ft_resumeSubmit(event, event.submitter);
+        if (esp_formtrace === false) {
+            if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
+                await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+            }
+            else if (blackList_formtrace && blackList_formtrace === true) {
+                await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
+            }
+            else {
+                await saveRecording(saveOnSubmit_formtrace, event);
+            }
         }
     }, true);
 });
-
-
-(() => {
-    const wrap = (name) => {
-        const orig = window[name];
-        if (typeof orig !== 'function') return;
-        window[name] = function (...args) {
-            if (_ft_allowSubmit_once) return orig.apply(this, args);
-            (async () => {
-                try {
-                    await _ft_runAsyncPipeline(); // no event object on this path
-                } finally {
-                    _ft_allowSubmit_once = true;
-                    orig.apply(this, args); // proceed with the original postback
-                }
-            })();
-        };
-    };
-    wrap('WebForm_DoPostBackWithOptions');
-    wrap('__doPostBack');
-})();
 
 function generateUUID() {
     return crypto.randomUUID();
@@ -331,7 +221,7 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
         }
 
         if (callback_formtrace) {
-            test({form: data, formProofResponse: responseAsJson2});
+            test({ form: data, formProofResponse: responseAsJson2 });
         }
         return responseAsJson2;
     } catch (error) {
@@ -392,7 +282,7 @@ async function formTraceSaveRecord(data = {}) {
         }
 
         if (callback_formtrace) {
-            test({form: data, formProofResponse: responseAsJson2});
+            test({ form: data, formProofResponse: responseAsJson2 });
         }
         return responseAsJson2;
     } catch (error) {
