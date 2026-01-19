@@ -90,8 +90,8 @@ async function verifyTfaCode(phone, event) {
         sendBtn.disabled = false;
         if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
-            if (saveOnSubmit) {
-                await saveRecording(saveOnSubmit, event);
+            if (saveOnSubmit_formtrace) {
+                await saveRecording(saveOnSubmit_formtrace, event);
             }
         } else if (codeValid.status === 409) {
             errorText.textContent = "Code used. Please try again.";
