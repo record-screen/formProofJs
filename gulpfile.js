@@ -20,16 +20,50 @@ const formProofEnvironmentApis = {
 };
 
 function build(apiEnvironment, cb) {
-    console.log('Build');
-    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/formtrace.js', 'src/tfaValidation.js', 'src/saveRecording.js', 'src/blackListPhone.js', 'src/utils/send2faCode.js', "src/utils/validate2faCode.js",
-        "src/utils/verifyPhoneBlackListApi.js", "src/utils/saveRecordings.js"])
+    console.log(`Build ${apiEnvironment} - v${version}`);
+
+    const sourceFiles = [
+        'node_modules/rrweb/dist/rrweb.js',
+        'src/formtrace.js',
+        'src/tfaValidation.js',
+        'src/saveRecording.js',
+        'src/blackListPhone.js',
+        'src/utils/send2faCode.js',
+        'src/utils/validate2faCode.js',
+        'src/utils/verifyPhoneBlackListApi.js',
+        'src/utils/saveRecordings.js'
+    ];
+
+    // Generar archivo con nombre fijo del ambiente (concat - legible)
+    gulp.src(sourceFiles)
+        .pipe(gp_concat(`formtrace-${apiEnvironment}-concat.js`))
+        .pipe(replace('__VERSION__', version))
+        .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
+        .pipe(gulp.dest('dist'));
+
+    // Generar archivo con nombre fijo del ambiente (minificado)
+    gulp.src(sourceFiles)
+        .pipe(gp_concat(`formtrace-${apiEnvironment}.js`))
+        .pipe(replace('__VERSION__', version))
+        .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
+        .pipe(gp_uglify())
+        .pipe(gulp.dest('dist'));
+
+    // Generar archivo con versión específica (concat - legible) - BACKUP
+    gulp.src(sourceFiles)
         .pipe(gp_concat(`formtrace-concat-v${version}.js`))
         .pipe(replace('__VERSION__', version))
         .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
-        .pipe(gulp.dest('dist'))
-        .pipe(gp_rename(`formtrace-v${version}.js`))
+        .pipe(gulp.dest('dist'));
+
+    // Generar archivo con versión específica (minificado) - BACKUP
+    gulp.src(sourceFiles)
+        .pipe(gp_concat(`formtrace-v${version}.js`))
+        .pipe(replace('__VERSION__', version))
+        .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
         .pipe(gp_uglify())
         .pipe(gulp.dest('dist'));
+
     cb();
 }
 
