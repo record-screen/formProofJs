@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "buildStaging": "gulp buildStaging && git add . && git commit -m 'Build formproof script'",
-    "buildProduction": "gulp buildProduction && git add . && git commit -m 'Build formproof script'",
+    "buildStaging": "gulp buildStaging",
+    "buildProduction": "gulp buildProduction",
     "push-changes": "git push"
   },
   "repository": {
