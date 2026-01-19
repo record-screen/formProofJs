@@ -20,7 +20,7 @@ A partir de la versión **v1.1.0**, hemos mejorado el sistema de distribución d
 <script src="https://cdn.jsdelivr.net/gh/record-screen/formProofJs@staging/dist/formtrace-staging.js"></script>
 
 <!-- OPCIÓN 2: Versión específica (si no quieres auto-actualizar) -->
-<script src="https://cdn.jsdelivr.net/gh/record-screen/formProofJs@staging/dist/formtrace-v1.1.0.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/record-screen/formProofJs@staging/dist/formtrace-staging-v1.1.0.js"></script>
 ```
 ✅ La URL no cambia, siempre obtienes la última versión automáticamente.
 
@@ -33,16 +33,16 @@ A partir de la versión **v1.1.0**, hemos mejorado el sistema de distribución d
 |---------|-------------|-----------------|
 | `formtrace-staging.js` | Versión minificada, siempre la última | ✅ **Producción** |
 | `formtrace-staging-concat.js` | Versión legible, siempre la última | 🔍 **Debug** |
-| `formtrace-v{version}.js` | Versión específica minificada | 🔒 **Sin auto-actualización** |
-| `formtrace-concat-v{version}.js` | Versión específica legible | 🔍 **Debug versión específica** |
+| `formtrace-staging-v{version}.js` | Versión específica minificada | 🔒 **Sin auto-actualización** |
+| `formtrace-staging-concat-v{version}.js` | Versión específica legible | 🔍 **Debug versión específica** |
 
 ### **Para Production:**
 | Archivo | Descripción | Uso Recomendado |
 |---------|-------------|-----------------|
 | `formtrace-production.js` | Versión minificada, siempre la última | ✅ **Producción** |
 | `formtrace-production-concat.js` | Versión legible, siempre la última | 🔍 **Debug** |
-| `formtrace-v{version}.js` | Versión específica minificada | 🔒 **Sin auto-actualización** |
-| `formtrace-concat-v{version}.js` | Versión específica legible | 🔍 **Debug versión específica** |
+| `formtrace-production-v{version}.js` | Versión específica minificada | 🔒 **Sin auto-actualización** |
+| `formtrace-production-concat-v{version}.js` | Versión específica legible | 🔍 **Debug versión específica** |
 
 ---
 

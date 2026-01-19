@@ -51,14 +51,14 @@ function build(apiEnvironment, cb) {
 
     // Generar archivo con versión específica (concat - legible) - BACKUP
     gulp.src(sourceFiles)
-        .pipe(gp_concat(`formtrace-concat-v${version}.js`))
+        .pipe(gp_concat(`formtrace-${apiEnvironment}-concat-v${version}.js`))
         .pipe(replace('__VERSION__', version))
         .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
         .pipe(gulp.dest('dist'));
 
     // Generar archivo con versión específica (minificado) - BACKUP
     gulp.src(sourceFiles)
-        .pipe(gp_concat(`formtrace-v${version}.js`))
+        .pipe(gp_concat(`formtrace-${apiEnvironment}-v${version}.js`))
         .pipe(replace('__VERSION__', version))
         .pipe(replace('base_api_value', formProofEnvironmentApis[apiEnvironment]))
         .pipe(gp_uglify())
