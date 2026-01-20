@@ -16,7 +16,7 @@ function installDependencies(cb) {
 const formProofEnvironmentApis = {
     local: 'https://bright-api-2n99o.ampt.app/api',
     staging: 'https://splendid-binary-uynxj.ampt.app/api',
-    production: 'https://intelligent-src-r12j9.ampt.app/api'
+    production: 'https://distributed-idea-tqljq.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
