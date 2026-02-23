@@ -16,7 +16,8 @@ function installDependencies(cb) {
 const formProofEnvironmentApis = {
     local: 'https://bright-api-2n99o.ampt.app/api',
     staging: 'https://splendid-binary-uynxj.ampt.app/api',
-    production: 'https://distributed-idea-tqljq.ampt.app/api'
+    production: 'https://distributed-idea-tqljq.ampt.app/api',
+    localMarco: 'https://novel-hack-d4iyn.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
@@ -79,6 +80,9 @@ function buildLocal(cb) {
     build('local', cb);
 }
 
+function buildLocalMarco(cb) {
+    build('localMarco', cb);
+}
 
 function buildBlackList(cb) {
     console.log('Build')
@@ -93,7 +97,7 @@ function buildBlackList(cb) {
 
 function watch() {
     gulp.watch(['src/formtrace.js', 'src/tfaValidation.js', 'src/saveRecording.js', 'src/blackListPhone.js', 'src/utils/send2faCode.js', 'src/utils/validate2faCode.js', "src/utils/verifyPhoneBlackListApi.js",
-        "src/utils/saveRecordings.js"], buildLocal);
+        "src/utils/saveRecordings.js"], buildLocalMarco);
 }
 
 function watchBuildBlackList() {
@@ -110,6 +114,7 @@ function replaceTemplate() {
 exports.build = build;
 exports.buildStaging = buildStaging;
 exports.buildProduction = buildProduction;
+exports.buildLocalMarco = buildLocalMarco;
 exports.buildBlackList = buildBlackList;
 exports.watch = watch;
 exports.watchBuildBlackList = watchBuildBlackList;
@@ -117,4 +122,5 @@ exports.watchBuildBlackList = watchBuildBlackList;
 exports.default = series(build);
 exports.default = series(buildStaging);
 exports.default = series(buildProduction);
+exports.default = series(buildLocalMarco);
 exports.default = series(buildBlackList);

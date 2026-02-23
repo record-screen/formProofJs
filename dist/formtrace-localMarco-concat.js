@@ -8100,7 +8100,7 @@ let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
 let debug_formtrace = false;
-let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
+let baseApi_formtrace = 'https://novel-hack-d4iyn.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
@@ -8178,118 +8178,51 @@ function formTraceStartRecord() {
     });
 }
 
-// Internal handler function for form submissions
-async function handleFormTraceSubmit(event) {
-    if (epd_formtrace && epd_formtrace === true && event) {
-        event.preventDefault();
-    }
-
-    if (esp_formtrace && esp_formtrace === true && event) {
-        event.stopPropagation();
-    }
-
-    const hiddenFormTrace = document.getElementById(redirectId_formtrace);
-    const termsText = document.getElementById(privacityInputId_formtrace);
-
-    if (debug_formtrace && debug_formtrace === true) {
-        let alertMessage = "Formtrace Submit Intercepted";
-
-        if (hiddenFormTrace?.value) {
-            alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
-        } else {
-            alertMessage += ` | no redirect`;
-        }
-
-        if (termsText) {
-            alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
-        } else {
-            alertMessage += ` | no terms detected`;
-        }
-
-        if (!event || !(event.target instanceof HTMLFormElement)) {
-            alertMessage += ` | __doPostBack mode`;
-        }
-
-        alert(alertMessage);
-        console.log("Form submission handled:", event?.target || 'via __doPostBack');
-    }
-
-    if (esp_formtrace === false) {
-        if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
-            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
-        }
-        else if (blackList_formtrace && blackList_formtrace === true) {
-            await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
-        }
-        else {
-            await saveRecording(saveOnSubmit_formtrace, event);
-        }
-    }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Standard submit event listener
     document.addEventListener("submit", async (event) => {
-        await handleFormTraceSubmit(event);
-    }, true);
+        if (epd_formtrace && epd_formtrace === true) {
+            event.preventDefault();
+        }
 
-    // ASP.NET __doPostBack interception
-    // This hooks into the ASP.NET postback mechanism
-    if (typeof window.__doPostBack === 'function') {
-        const originalDoPostBack = window.__doPostBack;
-        window.__doPostBack = async function(eventTarget, eventArgument) {
-            if (debug_formtrace && debug_formtrace === true) {
-                console.log('formTrace#intercepted __doPostBack:', eventTarget);
-            }
+        if (esp_formtrace && esp_formtrace === true) {
+            event.stopPropagation();
+        }
 
-            // Save the recording before the postback
-            await handleFormTraceSubmit(null);
-
-            // Call the original __doPostBack
-            return originalDoPostBack.call(this, eventTarget, eventArgument);
-        };
+        const hiddenFormTrace = document.getElementById(redirectId_formtrace);
+        const termsText = document.getElementById(privacityInputId_formtrace);
 
         if (debug_formtrace && debug_formtrace === true) {
-            console.log('formTrace#__doPostBack hook installed');
+            let alertMessage = "Formtrace Submit Intercepted";
+
+            if (hiddenFormTrace?.value) {
+                alertMessage += ` | redirect: ${hiddenFormTrace.value}`;
+            } else {
+                alertMessage += ` | no redirect`;
+            }
+
+            if (termsText) {
+                alertMessage += ` | terms detected @ ${privacityInputId_formtrace}`;
+            } else {
+                alertMessage += ` | no terms detected`;
+            }
+
+            alert(alertMessage);
+            console.log("Form submission blocked:", event.target);
         }
-    }
-
-    // Also try to hook __doPostBack if it's defined later (async script loading)
-    // This uses a getter/setter to detect when __doPostBack is defined
-    if (typeof window.__doPostBack === 'undefined') {
-        let _doPostBackValue;
-        let _hooked = false;
-
-        Object.defineProperty(window, '__doPostBack', {
-            get: function() {
-                return _doPostBackValue;
-            },
-            set: function(newValue) {
-                if (!_hooked && typeof newValue === 'function') {
-                    _hooked = true;
-                    const originalFunc = newValue;
-                    _doPostBackValue = async function(eventTarget, eventArgument) {
-                        if (debug_formtrace && debug_formtrace === true) {
-                            console.log('formTrace#intercepted __doPostBack (late hook):', eventTarget);
-                        }
-
-                        // Save the recording before the postback
-                        await handleFormTraceSubmit(null);
-
-                        // Call the original __doPostBack
-                        return originalFunc.call(this, eventTarget, eventArgument);
-                    };
-
-                    if (debug_formtrace && debug_formtrace === true) {
-                        console.log('formTrace#__doPostBack late hook installed');
-                    }
-                } else {
-                    _doPostBackValue = newValue;
-                }
-            },
-            configurable: true
-        });
-    }
+        console.log('esp_formtrace: ',esp_formtrace)
+        if (esp_formtrace === false) {
+            if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
+                await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+            }
+            else if (blackList_formtrace && blackList_formtrace === true) {
+                await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
+            }
+            else {
+                console.log('save...')
+                await saveRecording(saveOnSubmit_formtrace, event);
+            }
+        }
+    }, true);
 });
 
 function generateUUID() {
@@ -8333,9 +8266,10 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
     const userAgent = window.navigator.userAgent;
 
     try {
-        const responseIp = await fetch("https://api.ipify.org/?format=json");
-        const responseAsJson = await responseIp.json();
-        const clientIp = responseAsJson?.ip;
+        // const responseIp = await fetch("https://api.ipify.org/?format=json");
+        // const responseAsJson = await responseIp.json();
+        // const clientIp = responseAsJson?.ip;
+        const clientIp = '1.1.1.1';
         const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
@@ -8669,42 +8603,16 @@ function formatPhoneNumber(phone) {
 }
 
 async function saveRecording(saveOnSubmit, event) {
+    console.log('saveOnSubmit: ', saveOnSubmit);
     if (saveOnSubmit) {
         if (debug_formtrace && debug_formtrace === true){
             console.log('formTrace#saving on submit');
         }
-
-        // Obtener el formulario: desde event o buscándolo en el DOM
-        let formElement;
-
-        if (event && event.target instanceof HTMLFormElement) {
-            // Caso 1: Submit normal - tenemos el event con el form
-            formElement = event.target;
-            if (debug_formtrace && debug_formtrace === true){
-                console.log('formTrace#form obtained from event.target');
-            }
-        } else {
-            // Caso 2: __doPostBack - buscar el form en el DOM
-            // Intentar encontrar el form más cercano al script de FormProof
-            formElement = document.getElementById("formproofScript")?.closest('form');
-
-            // Si no se encuentra, buscar el primer form en la página
-            if (!formElement) {
-                formElement = document.querySelector('form');
-            }
-
-            if (debug_formtrace && debug_formtrace === true){
-                console.log('formTrace#form obtained from DOM (no event available)');
-            }
-        }
-
-        // Validar que tenemos un formulario válido
-        if (!formElement || !(formElement instanceof HTMLFormElement)) {
-            console.error("Invalid form element - no form found");
+        if (!event.target || !(event.target instanceof HTMLFormElement)) {
+            console.error("Invalid form element");
             return;
         }
-
-        const formData = new FormData(formElement);
+        const formData = new FormData(event.target);
         const data = {};
         for (let [key, value] of formData.entries()) {
             data[key] = value;
