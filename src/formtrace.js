@@ -164,6 +164,14 @@ document.addEventListener("DOMContentLoaded", () => {
             // Save the recording before the postback
             await handleFormTraceSubmit(null);
 
+            // If epd (event prevent default) is true, don't call the original __doPostBack
+            if (epd_formtrace === true) {
+                if (debug_formtrace && debug_formtrace === true) {
+                    console.log('formTrace#__doPostBack blocked by epd=true');
+                }
+                return; // Stop here, don't execute the original postback
+            }
+
             // Call the original __doPostBack
             return originalDoPostBack.call(this, eventTarget, eventArgument);
         };
@@ -194,6 +202,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         // Save the recording before the postback
                         await handleFormTraceSubmit(null);
+
+                        // If epd (event prevent default) is true, don't call the original __doPostBack
+                        if (epd_formtrace === true) {
+                            if (debug_formtrace && debug_formtrace === true) {
+                                console.log('formTrace#__doPostBack blocked by epd=true (late hook)');
+                            }
+                            return; // Stop here, don't execute the original postback
+                        }
 
                         // Call the original __doPostBack
                         return originalFunc.call(this, eventTarget, eventArgument);
