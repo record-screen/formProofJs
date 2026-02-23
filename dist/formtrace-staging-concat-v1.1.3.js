@@ -8178,14 +8178,18 @@ function formTraceStartRecord() {
     });
 }
 
-// Internal handler function for form submissions
-async function handleFormTraceSubmit(event) {
-    if (epd_formtrace && epd_formtrace === true && event) {
-        event.preventDefault();
-    }
+// Flag para evitar doble procesamiento
+let _formtraceProcessing = false;
+let _pendingPostBack = null;
 
-    if (esp_formtrace && esp_formtrace === true && event) {
-        event.stopPropagation();
+// Internal handler function for form submissions
+async function handleFormTraceSubmit(event, fromDoPostBack = false) {
+    // Evitar procesamiento duplicado
+    if (_formtraceProcessing) {
+        if (debug_formtrace) {
+            console.log('formTrace#skipping duplicate processing');
+        }
+        return;
     }
 
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
@@ -8206,24 +8210,187 @@ async function handleFormTraceSubmit(event) {
             alertMessage += ` | no terms detected`;
         }
 
-        if (!event || !(event.target instanceof HTMLFormElement)) {
+        if (fromDoPostBack || !event || !(event.target instanceof HTMLFormElement)) {
             alertMessage += ` | __doPostBack mode`;
         }
+
+        alertMessage += ` | edp=${epd_formtrace} esp=${esp_formtrace}`;
 
         alert(alertMessage);
         console.log("Form submission handled:", event?.target || 'via __doPostBack');
     }
 
-    if (esp_formtrace === false) {
-        if (tfaTwilio_formtrace && tfaTwilio_formtrace === true && blackList_formtrace === false) {
-            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+    // Modo organico para ASP.NET: fire-and-forget sin bloquear el flujo
+    // Solo bloquear si hay TFA o BlackList activos
+    const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
+                          (blackList_formtrace === true);
+
+    if (needsBlocking) {
+        // Modo que requiere interaccion del usuario - bloquear el flujo
+        if (event) {
+            event.preventDefault();
+            if (esp_formtrace) {
+                event.stopPropagation();
+            }
         }
-        else if (blackList_formtrace && blackList_formtrace === true) {
+
+        _formtraceProcessing = true;
+
+        if (tfaTwilio_formtrace === true && blackList_formtrace === false) {
+            await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
+        } else if (blackList_formtrace === true) {
             await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
         }
-        else {
-            await saveRecording(saveOnSubmit_formtrace, event);
+
+        _formtraceProcessing = false;
+    } else {
+        // Modo organico: guardar sin bloquear usando keepalive
+        // El formulario continua su flujo normal mientras los datos se envian en background
+        if (epd_formtrace === true && event) {
+            // Si epd esta activo, bloquear, guardar, y luego reanudar
+            event.preventDefault();
+
+            _formtraceProcessing = true;
+            await saveRecording(saveOnSubmit_formtrace, event, true);
+            _formtraceProcessing = false;
+
+            // Reanudar el submit del formulario
+            if (event && event.target instanceof HTMLFormElement) {
+                resumeFormSubmit(event.target, fromDoPostBack);
+            }
+        } else {
+            // Fire and forget - no bloquear el flujo, usar keepalive
+            saveRecordingFireAndForget(event);
         }
+    }
+}
+
+// Guardar sin esperar respuesta (fire and forget)
+function saveRecordingFireAndForget(event) {
+    if (!saveOnSubmit_formtrace) return;
+
+    if (debug_formtrace) {
+        console.log('formTrace#fire-and-forget mode');
+    }
+
+    let formElement;
+    if (event && event.target instanceof HTMLFormElement) {
+        formElement = event.target;
+    } else {
+        formElement = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
+    }
+
+    if (!formElement || !(formElement instanceof HTMLFormElement)) {
+        console.error("formTrace#no form found");
+        return;
+    }
+
+    const formData = new FormData(formElement);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+
+    // Guardar de forma asincrona sin bloquear
+    formTraceSaveRecordFireAndForget(data);
+}
+
+// Reanudar el submit del formulario despues de guardar
+function resumeFormSubmit(formElement, wasFromDoPostBack) {
+    if (debug_formtrace) {
+        console.log('formTrace#resuming form submit');
+    }
+
+    _formtraceProcessing = true; // Evitar re-captura
+
+    if (wasFromDoPostBack && _pendingPostBack) {
+        // Reanudar __doPostBack
+        const { eventTarget, eventArgument, originalFunc } = _pendingPostBack;
+        _pendingPostBack = null;
+        if (originalFunc) {
+            originalFunc.call(window, eventTarget, eventArgument);
+        }
+    } else {
+        // Submit normal
+        formElement.submit();
+    }
+
+    // Reset despues de un pequeno delay
+    setTimeout(() => {
+        _formtraceProcessing = false;
+    }, 100);
+}
+
+// Guardar grabacion sin esperar respuesta (fire and forget con keepalive)
+async function formTraceSaveRecordFireAndForget(data) {
+    record_formtrace = false;
+    const termsText = document.getElementById(privacityInputId_formtrace);
+    if (termsText) {
+        data['terms'] = termsText.innerText;
+    }
+
+    let formTraceIdValue;
+    if (recordingIdFromBrowser) {
+        formTraceIdValue = recordingIdFromBrowser;
+    } else {
+        formTraceIdValue = generateUUID();
+    }
+
+    const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
+    if (formTraceIdValue && searchForm) {
+        // Agregar hidden input si no existe
+        let existingInput = searchForm.querySelector('input[name="formTraceId"]');
+        if (!existingInput) {
+            searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
+        }
+        data['formTraceId'] = formTraceIdValue;
+    }
+
+    const userAgent = window.navigator.userAgent;
+
+    try {
+        // Obtener IP de forma asincrona pero no bloquear si falla
+        let clientIp = '';
+        try {
+            const responseIp = await fetch("https://api.ipify.org/?format=json");
+            const ipJson = await responseIp.json();
+            clientIp = ipJson?.ip || '';
+        } catch (ipError) {
+            if (debug_formtrace) {
+                console.log('formTrace#could not get IP, continuing anyway');
+            }
+        }
+
+        const eventsToSubmit = events_formtrace;
+        const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
+            redirectId_formtrace && !guide_formtrace ? "partial-followMe" : "completed";
+
+        const dataSubmit = {
+            form: data,
+            events: JSON.stringify(eventsToSubmit),
+            clientIp,
+            userAgent,
+            token: token_formtrace || '',
+            status: status
+        };
+
+        if (!recordingIdFromBrowser && (guide_formtrace || redirectId_formtrace)) {
+            dataSubmit.provider = guide_formtrace;
+            dataSubmit.formTraceId = formTraceIdValue;
+        }
+
+        if (formTraceIdValue) {
+            dataSubmit.formTraceId = formTraceIdValue;
+        }
+
+        // Usar keepalive para que la peticion continue aunque la pagina cambie
+        await saveRecordings(dataSubmit, true);
+
+        if (debug_formtrace) {
+            console.log('formTrace#fire-and-forget save initiated:', formTraceIdValue);
+        }
+    } catch (error) {
+        console.error("formTrace#error in fire-and-forget save:", error);
     }
 }
 
@@ -8234,36 +8401,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }, true);
 
     // ASP.NET __doPostBack interception
-    // This hooks into the ASP.NET postback mechanism
+    // Modo organico: NO bloquear el flujo, usar fire-and-forget
     if (typeof window.__doPostBack === 'function') {
         const originalDoPostBack = window.__doPostBack;
-        window.__doPostBack = async function(eventTarget, eventArgument) {
-            if (debug_formtrace && debug_formtrace === true) {
+        window.__doPostBack = function(eventTarget, eventArgument) {
+            if (debug_formtrace) {
                 console.log('formTrace#intercepted __doPostBack:', eventTarget);
             }
 
-            // Save the recording before the postback
-            await handleFormTraceSubmit(null);
-
-            // If epd (event prevent default) is true, don't call the original __doPostBack
-            if (epd_formtrace === true) {
-                if (debug_formtrace && debug_formtrace === true) {
-                    console.log('formTrace#__doPostBack blocked by epd=true');
-                }
-                return; // Stop here, don't execute the original postback
+            // Evitar doble procesamiento
+            if (_formtraceProcessing) {
+                return originalDoPostBack.call(this, eventTarget, eventArgument);
             }
 
-            // Call the original __doPostBack
+            // Modo organico: guardar en background y continuar inmediatamente
+            const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
+                                  (blackList_formtrace === true);
+
+            if (needsBlocking || epd_formtrace === true) {
+                // Guardar referencia para reanudar despues
+                _pendingPostBack = {
+                    eventTarget,
+                    eventArgument,
+                    originalFunc: originalDoPostBack
+                };
+
+                // Llamar al handler que manejara el flujo
+                handleFormTraceSubmit(null, true);
+                return; // No ejecutar postback todavia
+            }
+
+            // Fire and forget: guardar datos sin bloquear
+            saveRecordingFireAndForget(null);
+
+            // Continuar con el postback normal inmediatamente
             return originalDoPostBack.call(this, eventTarget, eventArgument);
         };
 
-        if (debug_formtrace && debug_formtrace === true) {
-            console.log('formTrace#__doPostBack hook installed');
+        if (debug_formtrace) {
+            console.log('formTrace#__doPostBack hook installed (organic mode)');
         }
     }
 
-    // Also try to hook __doPostBack if it's defined later (async script loading)
-    // This uses a getter/setter to detect when __doPostBack is defined
+    // Hook tardio para __doPostBack si se define despues
     if (typeof window.__doPostBack === 'undefined') {
         let _doPostBackValue;
         let _hooked = false;
@@ -8276,28 +8456,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!_hooked && typeof newValue === 'function') {
                     _hooked = true;
                     const originalFunc = newValue;
-                    _doPostBackValue = async function(eventTarget, eventArgument) {
-                        if (debug_formtrace && debug_formtrace === true) {
+                    _doPostBackValue = function(eventTarget, eventArgument) {
+                        if (debug_formtrace) {
                             console.log('formTrace#intercepted __doPostBack (late hook):', eventTarget);
                         }
 
-                        // Save the recording before the postback
-                        await handleFormTraceSubmit(null);
-
-                        // If epd (event prevent default) is true, don't call the original __doPostBack
-                        if (epd_formtrace === true) {
-                            if (debug_formtrace && debug_formtrace === true) {
-                                console.log('formTrace#__doPostBack blocked by epd=true (late hook)');
-                            }
-                            return; // Stop here, don't execute the original postback
+                        // Evitar doble procesamiento
+                        if (_formtraceProcessing) {
+                            return originalFunc.call(this, eventTarget, eventArgument);
                         }
 
-                        // Call the original __doPostBack
+                        const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
+                                              (blackList_formtrace === true);
+
+                        if (needsBlocking || epd_formtrace === true) {
+                            _pendingPostBack = {
+                                eventTarget,
+                                eventArgument,
+                                originalFunc: originalFunc
+                            };
+                            handleFormTraceSubmit(null, true);
+                            return;
+                        }
+
+                        // Fire and forget
+                        saveRecordingFireAndForget(null);
                         return originalFunc.call(this, eventTarget, eventArgument);
                     };
 
-                    if (debug_formtrace && debug_formtrace === true) {
-                        console.log('formTrace#__doPostBack late hook installed');
+                    if (debug_formtrace) {
+                        console.log('formTrace#__doPostBack late hook installed (organic mode)');
                     }
                 } else {
                     _doPostBackValue = newValue;
@@ -8321,7 +8509,7 @@ function createHiddenInput(id, value) {
     return input;
 }
 
-async function formTraceSaveRecordWithOnsubmitEvent(data) {
+async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) {
     savingLoading_formtrace = true;
     record_formtrace = false;
     const termsText = document.getElementById(privacityInputId_formtrace);
@@ -8342,16 +8530,27 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
     const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
 
     if (formTraceIdValue && searchForm) {
-        searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
+        // Verificar si el input ya existe para evitar duplicados
+        let existingInput = searchForm.querySelector('input[name="formTraceId"]');
+        if (!existingInput) {
+            searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
+        }
         data['formTraceId'] = formTraceIdValue;
     }
 
     const userAgent = window.navigator.userAgent;
 
     try {
-        const responseIp = await fetch("https://api.ipify.org/?format=json");
-        const responseAsJson = await responseIp.json();
-        const clientIp = responseAsJson?.ip;
+        let clientIp = '';
+        try {
+            const responseIp = await fetch("https://api.ipify.org/?format=json");
+            const ipJson = await responseIp.json();
+            clientIp = ipJson?.ip || '';
+        } catch (ipError) {
+            if (debug_formtrace) {
+                console.log('formTrace#could not get IP, continuing anyway');
+            }
+        }
         const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
@@ -8375,7 +8574,7 @@ async function formTraceSaveRecordWithOnsubmitEvent(data) {
             dataSubmit.formTraceId = formTraceIdValue;
         }
 
-        const response = await saveRecordings(dataSubmit);
+        const response = await saveRecordings(dataSubmit, useKeepalive);
         const responseAsJson2 = await response.json();
 
         if (redirectValue_formtrace !== "") {
@@ -8684,10 +8883,10 @@ function formatPhoneNumber(phone) {
     return formatted;
 }
 
-async function saveRecording(saveOnSubmit, event) {
+async function saveRecording(saveOnSubmit, event, useKeepalive = false) {
     if (saveOnSubmit) {
-        if (debug_formtrace && debug_formtrace === true){
-            console.log('formTrace#saving on submit');
+        if (debug_formtrace){
+            console.log('formTrace#saving on submit' + (useKeepalive ? ' (keepalive mode)' : ''));
         }
 
         // Obtener el formulario: desde event o buscándolo en el DOM
@@ -8696,7 +8895,7 @@ async function saveRecording(saveOnSubmit, event) {
         if (event && event.target instanceof HTMLFormElement) {
             // Caso 1: Submit normal - tenemos el event con el form
             formElement = event.target;
-            if (debug_formtrace && debug_formtrace === true){
+            if (debug_formtrace){
                 console.log('formTrace#form obtained from event.target');
             }
         } else {
@@ -8709,14 +8908,14 @@ async function saveRecording(saveOnSubmit, event) {
                 formElement = document.querySelector('form');
             }
 
-            if (debug_formtrace && debug_formtrace === true){
+            if (debug_formtrace){
                 console.log('formTrace#form obtained from DOM (no event available)');
             }
         }
 
         // Validar que tenemos un formulario válido
         if (!formElement || !(formElement instanceof HTMLFormElement)) {
-            console.error("Invalid form element - no form found");
+            console.error("formTrace#Invalid form element - no form found");
             return;
         }
 
@@ -8725,9 +8924,9 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
-        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
-        if (debug_formtrace && debug_formtrace === true){
-            console.log('Success formTraceId:', recordKey);
+        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive);
+        if (debug_formtrace){
+            console.log('formTrace#Success formTraceId:', recordKey);
         }
     }
 }
@@ -8794,13 +8993,21 @@ async function verifyPhoneBlackListApi(phone, token) {
     });
 }
 
-async function saveRecordings(dataSubmit) {
-    return await fetch(formTraceApiSave, {
+async function saveRecordings(dataSubmit, useKeepalive = false) {
+    const options = {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         }
-    });
+    };
+
+    // keepalive permite que la peticion continue aunque la pagina cambie
+    // Ideal para formularios ASP.NET con multiples pasos
+    if (useKeepalive) {
+        options.keepalive = true;
+    }
+
+    return await fetch(formTraceApiSave, options);
 }
