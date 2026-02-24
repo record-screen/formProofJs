@@ -8386,12 +8386,36 @@ function resumeFormSubmit(formElement, wasFromDoPostBack) {
         }
     } else {
         // Submit normal
+        // Usar HTMLFormElement.prototype.submit.call() para evitar conflicto
+        // cuando hay un elemento con name="submit" que sobrescribe el metodo nativo
         if (debug_formtrace) {
             console.log('formTrace#resuming via form.submit()');
         }
-        formElement.submit();
-        if (debug_formtrace) {
-            console.log('formTrace#form.submit() executed');
+        try {
+            // Intentar submit nativo primero (mas compatible)
+            HTMLFormElement.prototype.submit.call(formElement);
+            if (debug_formtrace) {
+                console.log('formTrace#form.submit() executed via prototype');
+            }
+        } catch (submitError) {
+            if (debug_formtrace) {
+                console.log('formTrace#prototype.submit failed, trying direct submit');
+            }
+            // Fallback: intentar submit directo
+            if (typeof formElement.submit === 'function') {
+                formElement.submit();
+            } else {
+                // Ultimo recurso: buscar y clickear el boton submit
+                const submitBtn = formElement.querySelector('input[type="submit"], button[type="submit"]');
+                if (submitBtn) {
+                    if (debug_formtrace) {
+                        console.log('formTrace#clicking submit button as fallback');
+                    }
+                    submitBtn.click();
+                } else {
+                    console.error('formTrace#could not find a way to submit the form');
+                }
+            }
         }
     }
 
