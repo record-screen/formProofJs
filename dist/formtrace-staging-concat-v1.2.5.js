@@ -8104,7 +8104,6 @@ let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
-let showLoading_formtrace = false;
 let redirectId_formtrace = '';
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
@@ -8128,7 +8127,6 @@ if (formtraceScriptElement) {
     debug_formtrace = parseBoolean(urlParams.get("debug"));
     epd_formtrace = parseBoolean(urlParams.get("epd"))
     esp_formtrace = parseBoolean(urlParams.get("esp"))
-    showLoading_formtrace = parseBoolean(urlParams.get("loading"))
     tfaTwilio_formtrace = parseBoolean(urlParams.get("tfaTwilio"));
     keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     blackList_formtrace = parseBoolean(urlParams.get("blackList"));
@@ -8147,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.6 initialized');
+    console.log('formTrace v.1.2.5 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8358,14 +8356,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
 // Loading spinner para mostrar mientras se guardan los datos
 function showFormTraceLoading() {
-    // Verificar si loading esta habilitado
-    if (!showLoading_formtrace) {
-        if (debug_formtrace) {
-            console.log('formTrace#loading disabled by config');
-        }
-        return;
-    }
-
     // Evitar duplicados
     if (document.getElementById('formtrace-loading-overlay')) {
         return;
@@ -8374,17 +8364,21 @@ function showFormTraceLoading() {
     // Crear overlay
     const overlay = document.createElement('div');
     overlay.id = 'formtrace-loading-overlay';
-    overlay.innerHTML = `<div class="formtrace-spinner"></div>`;
+    overlay.innerHTML = `
+        <div class="formtrace-spinner"></div>
+        <p class="formtrace-loading-text">Processing...</p>
+    `;
 
-    // Estilos inline - fondo gris claro
+    // Estilos inline para no depender de CSS externo
     overlay.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(128, 128, 128, 0.3);
+        background: rgba(255, 255, 255, 0.9);
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 999999;
@@ -8397,10 +8391,16 @@ function showFormTraceLoading() {
         .formtrace-spinner {
             width: 50px;
             height: 50px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #666;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
             animation: formtrace-spin 1s linear infinite;
+        }
+        .formtrace-loading-text {
+            margin-top: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333;
         }
         @keyframes formtrace-spin {
             0% { transform: rotate(0deg); }
