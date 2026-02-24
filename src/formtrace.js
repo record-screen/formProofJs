@@ -697,17 +697,41 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
 
     const userAgent = window.navigator.userAgent;
 
+    if (debug_formtrace) {
+        console.log('formTrace#formTraceSaveRecordWithOnsubmitEvent starting, useKeepalive:', useKeepalive);
+    }
+
     try {
+        // Obtener IP - con timeout corto para no bloquear
         let clientIp = '';
-        try {
-            const responseIp = await fetch("https://api.ipify.org/?format=json");
-            const ipJson = await responseIp.json();
-            clientIp = ipJson?.ip || '';
-        } catch (ipError) {
+        if (!useKeepalive) {
+            // Solo obtener IP si NO usamos keepalive (tenemos tiempo)
+            try {
+                if (debug_formtrace) {
+                    console.log('formTrace#fetching IP from ipify...');
+                }
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 seg timeout
+                const responseIp = await fetch("https://api.ipify.org/?format=json", {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                const ipJson = await responseIp.json();
+                clientIp = ipJson?.ip || '';
+                if (debug_formtrace) {
+                    console.log('formTrace#IP obtained:', clientIp);
+                }
+            } catch (ipError) {
+                if (debug_formtrace) {
+                    console.log('formTrace#could not get IP, continuing anyway:', ipError.message);
+                }
+            }
+        } else {
             if (debug_formtrace) {
-                console.log('formTrace#could not get IP, continuing anyway');
+                console.log('formTrace#skipping IP fetch (keepalive mode)');
             }
         }
+
         const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
@@ -731,10 +755,14 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
             dataSubmit.formTraceId = formTraceIdValue;
         }
 
+        if (debug_formtrace) {
+            console.log('formTrace#about to call saveRecordings, payload size:', JSON.stringify(dataSubmit).length, 'bytes');
+        }
+
         const response = await saveRecordings(dataSubmit, useKeepalive);
 
         if (debug_formtrace) {
-            console.log('formTrace#save completed, formTraceId:', formTraceIdValue);
+            console.log('formTrace#saveRecordings completed, formTraceId:', formTraceIdValue);
         }
 
         // Intentar parsear respuesta
