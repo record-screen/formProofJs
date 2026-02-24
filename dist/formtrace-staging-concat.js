@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.1.9 initialized');
+    console.log('formTrace v.1.2.0 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8814,18 +8814,16 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
 
         const response = await saveRecordings(dataSubmit, useKeepalive);
 
-        // Si usamos keepalive/beacon, no esperamos respuesta real
-        if (useKeepalive) {
-            if (debug_formtrace) {
-                console.log('formTrace#save sent via keepalive/beacon, formTraceId:', formTraceIdValue);
-            }
-            return { formTraceId: formTraceIdValue, sentViaBeacon: true };
+        if (debug_formtrace) {
+            console.log('formTrace#save completed, formTraceId:', formTraceIdValue);
         }
 
-        // Solo procesar respuesta si no usamos keepalive
-        let responseAsJson2 = {};
+        // Intentar parsear respuesta
+        let responseAsJson2 = { formTraceId: formTraceIdValue };
         try {
-            responseAsJson2 = await response.json();
+            if (response && typeof response.json === 'function') {
+                responseAsJson2 = await response.json();
+            }
         } catch (jsonError) {
             if (debug_formtrace) {
                 console.log('formTrace#could not parse response json:', jsonError.message);
@@ -9251,73 +9249,6 @@ async function verifyPhoneBlackListApi(phone, token) {
 async function saveRecordings(dataSubmit, useKeepalive = false) {
     const jsonBody = JSON.stringify(dataSubmit);
 
-    // Cuando keepalive=true, intentar multiples metodos
-    if (useKeepalive) {
-        // Metodo 1: sendBeacon con text/plain (evita CORS preflight)
-        if (navigator.sendBeacon) {
-            // Usar text/plain para evitar preflight CORS
-            const blob = new Blob([jsonBody], { type: 'text/plain' });
-            const success = navigator.sendBeacon(formTraceApiSave, blob);
-            if (debug_formtrace) {
-                console.log('formTrace#sendBeacon (text/plain) result:', success);
-            }
-            if (success) {
-                return {
-                    ok: true,
-                    json: async () => ({ success: true, message: 'sent via beacon' })
-                };
-            }
-        }
-
-        // Metodo 2: fetch con keepalive (fire-and-forget, no await)
-        if (debug_formtrace) {
-            console.log('formTrace#trying fetch with keepalive (fire-and-forget)');
-        }
-        try {
-            // Iniciar fetch pero NO esperar - solo disparar
-            fetch(formTraceApiSave, {
-                method: 'POST',
-                body: jsonBody,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                keepalive: true
-            }).catch(err => {
-                if (debug_formtrace) {
-                    console.log('formTrace#keepalive fetch error (expected if page changes):', err.message);
-                }
-            });
-
-            return {
-                ok: true,
-                json: async () => ({ success: true, message: 'sent via keepalive fetch' })
-            };
-        } catch (e) {
-            if (debug_formtrace) {
-                console.log('formTrace#keepalive fetch setup error:', e.message);
-            }
-        }
-
-        // Metodo 3: ultimo intento con imagen pixel (mas compatible)
-        try {
-            const encodedData = encodeURIComponent(jsonBody);
-            const img = new Image();
-            img.src = `${formTraceApiSave}?data=${encodedData}&_t=${Date.now()}`;
-            if (debug_formtrace) {
-                console.log('formTrace#sent via image pixel fallback');
-            }
-            return {
-                ok: true,
-                json: async () => ({ success: true, message: 'sent via image pixel' })
-            };
-        } catch (imgError) {
-            if (debug_formtrace) {
-                console.log('formTrace#image pixel failed:', imgError.message);
-            }
-        }
-    }
-
-    // Modo normal: fetch con await
     const options = {
         method: 'POST',
         body: jsonBody,
@@ -9326,5 +9257,43 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
         }
     };
 
-    return await fetch(formTraceApiSave, options);
+    // keepalive permite que la peticion continue si la pagina cambia
+    // DESPUES de que se envien los datos
+    if (useKeepalive) {
+        options.keepalive = true;
+    }
+
+    if (debug_formtrace) {
+        console.log('formTrace#fetch starting with keepalive:', useKeepalive);
+    }
+
+    try {
+        // ESPERAR a que el fetch se complete (o al menos envie los datos)
+        const response = await fetch(formTraceApiSave, options);
+
+        if (debug_formtrace) {
+            console.log('formTrace#fetch completed, status:', response.status);
+        }
+
+        return response;
+    } catch (fetchError) {
+        if (debug_formtrace) {
+            console.log('formTrace#fetch error:', fetchError.message);
+        }
+
+        // Si el fetch falla, intentar sendBeacon como fallback
+        if (useKeepalive && navigator.sendBeacon) {
+            const blob = new Blob([jsonBody], { type: 'text/plain' });
+            const success = navigator.sendBeacon(formTraceApiSave, blob);
+            if (debug_formtrace) {
+                console.log('formTrace#sendBeacon fallback result:', success);
+            }
+            return {
+                ok: success,
+                json: async () => ({ success, message: 'sent via beacon fallback' })
+            };
+        }
+
+        throw fetchError;
+    }
 }
