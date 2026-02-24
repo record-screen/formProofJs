@@ -8813,7 +8813,24 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
         }
 
         const response = await saveRecordings(dataSubmit, useKeepalive);
-        const responseAsJson2 = await response.json();
+
+        // Si usamos keepalive/beacon, no esperamos respuesta real
+        if (useKeepalive) {
+            if (debug_formtrace) {
+                console.log('formTrace#save sent via keepalive/beacon, formTraceId:', formTraceIdValue);
+            }
+            return { formTraceId: formTraceIdValue, sentViaBeacon: true };
+        }
+
+        // Solo procesar respuesta si no usamos keepalive
+        let responseAsJson2 = {};
+        try {
+            responseAsJson2 = await response.json();
+        } catch (jsonError) {
+            if (debug_formtrace) {
+                console.log('formTrace#could not parse response json:', jsonError.message);
+            }
+        }
 
         if (redirectValue_formtrace !== "") {
             const redirectUrl = new URL(redirectValue_formtrace);
@@ -9232,6 +9249,22 @@ async function verifyPhoneBlackListApi(phone, token) {
 }
 
 async function saveRecordings(dataSubmit, useKeepalive = false) {
+    // Cuando keepalive=true, usar sendBeacon que es mas robusto
+    // para enviar datos cuando la pagina esta a punto de cerrarse/cambiar
+    if (useKeepalive && navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify(dataSubmit)], { type: 'application/json' });
+        const success = navigator.sendBeacon(formTraceApiSave, blob);
+        if (debug_formtrace) {
+            console.log('formTrace#sendBeacon result:', success);
+        }
+        // sendBeacon no devuelve respuesta, retornamos un objeto mock
+        return {
+            ok: success,
+            json: async () => ({ success, message: 'sent via beacon' })
+        };
+    }
+
+    // Fallback a fetch normal
     const options = {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
@@ -9241,8 +9274,6 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
         }
     };
 
-    // keepalive permite que la peticion continue aunque la pagina cambie
-    // Ideal para formularios ASP.NET con multiples pasos
     if (useKeepalive) {
         options.keepalive = true;
     }

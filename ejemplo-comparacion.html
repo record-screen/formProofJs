@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comparación: Submit Normal vs __doPostBack</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .example { border: 2px solid #ddd; padding: 20px; border-radius: 8px; }
+        .example.normal { border-color: #28a745; }
+        .example.aspnet { border-color: #dc3545; }
+        h2 { margin-top: 0; }
+        .code { background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .log { background: #000; color: #0f0; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; min-height: 200px; margin-top: 10px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .success { background: #28a745; color: white; border: none; }
+        .danger { background: #dc3545; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Comparación: Submit Normal vs __doPostBack</h1>
+    
+    <div class="container">
+        <!-- Submit Normal -->
+        <div class="example normal">
+            <h2>✅ Submit Normal (HTML Estándar)</h2>
+            <form id="normalForm">
+                <input type="text" name="nombre" placeholder="Tu nombre" required />
+                <br><br>
+                <button type="submit" class="success">Enviar (Submit Normal)</button>
+            </form>
+            
+            <h3>Código:</h3>
+            <div class="code">
+&lt;form id="normalForm"&gt;
+    &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+document.addEventListener('submit', (event) => {
+    console.log('event:', event);
+    console.log('event.target:', event.target);
+});
+&lt;/script&gt;
+            </div>
+            
+            <h3>Log:</h3>
+            <div class="log" id="normalLog"></div>
+        </div>
+        
+        <!-- ASP.NET __doPostBack -->
+        <div class="example aspnet">
+            <h2>❌ ASP.NET __doPostBack</h2>
+            <form id="aspnetForm">
+                <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+                <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+                <input type="text" name="nombre" placeholder="Tu nombre" required />
+                <br><br>
+                <button type="button" class="danger" onclick="__doPostBack('btnSubmit', '')">
+                    Enviar (ASP.NET __doPostBack)
+                </button>
+            </form>
+            
+            <h3>Código:</h3>
+            <div class="code">
+&lt;form id="aspnetForm"&gt;
+    &lt;button onclick="__doPostBack('btnSubmit', '')"&gt;
+        Enviar
+    &lt;/button&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+function __doPostBack(target, arg) {
+    // NO hay objeto event aquí
+    console.log('args:', [target, arg]);
+    form.submit(); // NO dispara 'submit' event
+}
+&lt;/script&gt;
+            </div>
+            
+            <h3>Log:</h3>
+            <div class="log" id="aspnetLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // Función para agregar logs
+        function addLog(logId, message, isError = false) {
+            const logElement = document.getElementById(logId);
+            const color = isError ? '#ff6b6b' : '#0f0';
+            logElement.innerHTML += `<span style="color: ${color}">${message}</span>\n`;
+        }
+
+        // ===== SUBMIT NORMAL =====
+        document.getElementById('normalForm').addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevenir envío real
+            
+            addLog('normalLog', '=== Submit Normal ===');
+            addLog('normalLog', `✅ event existe: ${event !== undefined}`);
+            addLog('normalLog', `✅ event.type: "${event.type}"`);
+            addLog('normalLog', `✅ event.target: ${event.target.tagName}`);
+            addLog('normalLog', `✅ event.target.id: "${event.target.id}"`);
+            addLog('normalLog', `✅ event.submitter: ${event.submitter?.tagName || 'undefined'}`);
+            addLog('normalLog', '');
+            addLog('normalLog', '🎯 FormProof puede usar event.target sin problemas');
+        });
+
+        // ===== ASP.NET __doPostBack =====
+        
+        // Simular la función __doPostBack de ASP.NET
+        window.__doPostBack = function(eventTarget, eventArgument) {
+            addLog('aspnetLog', '=== __doPostBack llamado ===');
+            addLog('aspnetLog', `Parámetros recibidos:`);
+            addLog('aspnetLog', `  - eventTarget: "${eventTarget}"`);
+            addLog('aspnetLog', `  - eventArgument: "${eventArgument}"`);
+            addLog('aspnetLog', '');
+            addLog('aspnetLog', '❌ NO hay objeto event disponible', true);
+            addLog('aspnetLog', '❌ Solo hay strings como parámetros', true);
+            addLog('aspnetLog', '');
+            
+            // Simular lo que hace FormProof
+            addLog('aspnetLog', '--- FormProof intercepta ---');
+            addLog('aspnetLog', 'function(...args) {');
+            addLog('aspnetLog', `  args = ["${eventTarget}", "${eventArgument}"]`);
+            addLog('aspnetLog', '  await _ft_runAsyncPipeline();  // ❌ Sin parámetros', true);
+            addLog('aspnetLog', '}');
+            addLog('aspnetLog', '');
+            
+            // Simular el error
+            addLog('aspnetLog', '--- Dentro de saveRecording ---');
+            addLog('aspnetLog', 'function saveRecording(saveOnSubmit, event) {');
+            addLog('aspnetLog', `  event = undefined  // ❌`, true);
+            addLog('aspnetLog', `  event.target  // 💥 CRASH!`, true);
+            addLog('aspnetLog', '}');
+            addLog('aspnetLog', '');
+            addLog('aspnetLog', '💥 TypeError: Cannot read properties of undefined', true);
+            
+            // Llenar campos ocultos (como hace ASP.NET)
+            document.getElementById('__EVENTTARGET').value = eventTarget;
+            document.getElementById('__EVENTARGUMENT').value = eventArgument;
+            
+            // NO llamamos a form.submit() para no recargar la página
+        };
+
+        // Agregar instrucciones iniciales
+        addLog('normalLog', '👆 Haz clic en el botón de arriba');
+        addLog('aspnetLog', '👆 Haz clic en el botón de arriba');
+    </script>
+</body>
+</html>
+
