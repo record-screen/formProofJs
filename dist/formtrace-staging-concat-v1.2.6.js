@@ -8104,7 +8104,6 @@ let baseApi_formtrace = 'https://splendid-binary-uynxj.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
-let showLoading_formtrace = false;
 let redirectId_formtrace = '';
 const urlParamsBrowser = new URLSearchParams(window.location.search);
 const recordingIdFromBrowser = urlParamsBrowser.get("formTraceId");
@@ -8128,7 +8127,6 @@ if (formtraceScriptElement) {
     debug_formtrace = parseBoolean(urlParams.get("debug"));
     epd_formtrace = parseBoolean(urlParams.get("epd"))
     esp_formtrace = parseBoolean(urlParams.get("esp"))
-    showLoading_formtrace = parseBoolean(urlParams.get("loading"))
     tfaTwilio_formtrace = parseBoolean(urlParams.get("tfaTwilio"));
     keepVideo_formtrace = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     blackList_formtrace = parseBoolean(urlParams.get("blackList"));
@@ -8305,9 +8303,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
             _formtraceProcessing = true;
 
-            // Mostrar loading
-            showFormTraceLoading();
-
             if (debug_formtrace) {
                 console.log('formTrace#saving recording with keepalive...');
             }
@@ -8320,9 +8315,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
                 }
                 // Continuar con el submit aunque falle el guardado
             }
-
-            // Ocultar loading
-            hideFormTraceLoading();
 
             // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
@@ -8353,82 +8345,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
             saveRecordingFireAndForget(event);
         }
-    }
-}
-
-// Loading spinner para mostrar mientras se guardan los datos
-function showFormTraceLoading() {
-    // Verificar si loading esta habilitado
-    if (!showLoading_formtrace) {
-        if (debug_formtrace) {
-            console.log('formTrace#loading disabled by config');
-        }
-        return;
-    }
-
-    // Evitar duplicados
-    if (document.getElementById('formtrace-loading-overlay')) {
-        return;
-    }
-
-    // Crear overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'formtrace-loading-overlay';
-    overlay.innerHTML = `<div class="formtrace-spinner"></div>`;
-
-    // Estilos inline - fondo gris claro
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(128, 128, 128, 0.3);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 999999;
-    `;
-
-    // Agregar estilos del spinner
-    const style = document.createElement('style');
-    style.id = 'formtrace-loading-styles';
-    style.textContent = `
-        .formtrace-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #666;
-            border-radius: 50%;
-            animation: formtrace-spin 1s linear infinite;
-        }
-        @keyframes formtrace-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    `;
-
-    document.head.appendChild(style);
-    document.body.appendChild(overlay);
-
-    if (debug_formtrace) {
-        console.log('formTrace#loading shown');
-    }
-}
-
-function hideFormTraceLoading() {
-    const overlay = document.getElementById('formtrace-loading-overlay');
-    const style = document.getElementById('formtrace-loading-styles');
-
-    if (overlay) {
-        overlay.remove();
-    }
-    if (style) {
-        style.remove();
-    }
-
-    if (debug_formtrace) {
-        console.log('formTrace#loading hidden');
     }
 }
 
