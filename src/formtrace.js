@@ -733,18 +733,16 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
 
         const response = await saveRecordings(dataSubmit, useKeepalive);
 
-        // Si usamos keepalive/beacon, no esperamos respuesta real
-        if (useKeepalive) {
-            if (debug_formtrace) {
-                console.log('formTrace#save sent via keepalive/beacon, formTraceId:', formTraceIdValue);
-            }
-            return { formTraceId: formTraceIdValue, sentViaBeacon: true };
+        if (debug_formtrace) {
+            console.log('formTrace#save completed, formTraceId:', formTraceIdValue);
         }
 
-        // Solo procesar respuesta si no usamos keepalive
-        let responseAsJson2 = {};
+        // Intentar parsear respuesta
+        let responseAsJson2 = { formTraceId: formTraceIdValue };
         try {
-            responseAsJson2 = await response.json();
+            if (response && typeof response.json === 'function') {
+                responseAsJson2 = await response.json();
+            }
         } catch (jsonError) {
             if (debug_formtrace) {
                 console.log('formTrace#could not parse response json:', jsonError.message);

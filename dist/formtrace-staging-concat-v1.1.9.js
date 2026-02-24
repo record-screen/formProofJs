@@ -8407,12 +8407,15 @@ function resumeFormSubmit(formElement, wasFromDoPostBack, submitterButton = null
         // MEJOR OPCION: Hacer click en el boton original
         // Esto es crucial para ASP.NET porque establece __EVENTTARGET y __EVENTARGUMENT
         if (debug_formtrace) {
-            console.log('formTrace#resuming via submitter button click');
+            console.log('formTrace#resuming via submitter button click (with 50ms delay for fetch)');
         }
-        submitterButton.click();
-        if (debug_formtrace) {
-            console.log('formTrace#submitter button clicked');
-        }
+        // Pequeño delay para dar tiempo al fetch de iniciar la conexion
+        setTimeout(() => {
+            submitterButton.click();
+            if (debug_formtrace) {
+                console.log('formTrace#submitter button clicked');
+            }
+        }, 50);
     } else {
         // Fallback: Submit directo
         if (debug_formtrace) {
