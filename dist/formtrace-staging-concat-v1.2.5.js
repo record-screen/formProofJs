@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.7 initialized');
+    console.log('formTrace v.1.2.5 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8303,6 +8303,9 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
             _formtraceProcessing = true;
 
+            // Mostrar loading
+            showFormTraceLoading();
+
             if (debug_formtrace) {
                 console.log('formTrace#saving recording with keepalive...');
             }
@@ -8315,6 +8318,9 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
                 }
                 // Continuar con el submit aunque falle el guardado
             }
+
+            // Ocultar loading
+            hideFormTraceLoading();
 
             // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
@@ -8345,6 +8351,84 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
             saveRecordingFireAndForget(event);
         }
+    }
+}
+
+// Loading spinner para mostrar mientras se guardan los datos
+function showFormTraceLoading() {
+    // Evitar duplicados
+    if (document.getElementById('formtrace-loading-overlay')) {
+        return;
+    }
+
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'formtrace-loading-overlay';
+    overlay.innerHTML = `
+        <div class="formtrace-spinner"></div>
+        <p class="formtrace-loading-text">Processing...</p>
+    `;
+
+    // Estilos inline para no depender de CSS externo
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 999999;
+    `;
+
+    // Agregar estilos del spinner
+    const style = document.createElement('style');
+    style.id = 'formtrace-loading-styles';
+    style.textContent = `
+        .formtrace-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: formtrace-spin 1s linear infinite;
+        }
+        .formtrace-loading-text {
+            margin-top: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333;
+        }
+        @keyframes formtrace-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(overlay);
+
+    if (debug_formtrace) {
+        console.log('formTrace#loading shown');
+    }
+}
+
+function hideFormTraceLoading() {
+    const overlay = document.getElementById('formtrace-loading-overlay');
+    const style = document.getElementById('formtrace-loading-styles');
+
+    if (overlay) {
+        overlay.remove();
+    }
+    if (style) {
+        style.remove();
+    }
+
+    if (debug_formtrace) {
+        console.log('formTrace#loading hidden');
     }
 }
 

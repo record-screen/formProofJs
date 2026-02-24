@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.7 initialized');
+    console.log('formTrace v.1.2.2 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8282,17 +8282,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             if (debug_formtrace) {
                 console.log('formTrace#entering EPD mode (block, save, resume)');
             }
-
-            // Validar formulario ASP.NET antes de guardar
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving');
-                }
-                // No prevenir el evento - dejar que ASP.NET muestre los errores
-                return;
-            }
-
             event.preventDefault();
 
             // Guardar referencia al boton que disparo el submit (para ASP.NET)
@@ -8302,7 +8291,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             }
 
             _formtraceProcessing = true;
-
             if (debug_formtrace) {
                 console.log('formTrace#saving recording with keepalive...');
             }
@@ -8315,7 +8303,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
                 }
                 // Continuar con el submit aunque falle el guardado
             }
-
             // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
             // Reanudar el submit del formulario
@@ -8333,61 +8320,9 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             if (debug_formtrace) {
                 console.log('formTrace#entering ORGANIC mode (fire-and-forget)');
             }
-
-            // Validar antes de guardar en modo organico tambien
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving (organic mode)');
-                }
-                return;
-            }
-
             saveRecordingFireAndForget(event);
         }
     }
-}
-
-// Validar formulario ASP.NET usando la validacion nativa
-function validateAspNetForm() {
-    // Verificar si existe la funcion de validacion de ASP.NET
-    if (typeof window.WebForm_OnSubmit === 'function') {
-        try {
-            const isValid = window.WebForm_OnSubmit();
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit error:', validationError.message);
-            }
-            // Si hay error en la validacion, asumir que es valido
-            return true;
-        }
-    }
-
-    // Verificar validadores de ASP.NET directamente
-    if (typeof window.Page_ClientValidate === 'function') {
-        try {
-            const isValid = window.Page_ClientValidate();
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate error:', validationError.message);
-            }
-            return true;
-        }
-    }
-
-    // Si no hay validacion de ASP.NET, asumir que es valido
-    if (debug_formtrace) {
-        console.log('formTrace#no ASP.NET validation found, assuming valid');
-    }
-    return true;
 }
 
 // Guardar sin esperar respuesta (fire and forget)
@@ -9352,60 +9287,6 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
         console.log('formTrace#payload too large for keepalive:', isPayloadTooLarge);
     }
 
-    // Para payloads grandes, usar XMLHttpRequest sincrono como ultimo recurso
-    // Esto garantiza que los datos se envien antes de que la pagina cambie
-    if (isPayloadTooLarge) {
-        if (debug_formtrace) {
-            console.log('formTrace#using XMLHttpRequest for large payload');
-        }
-
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', formTraceApiSave, true); // true = async
-            xhr.setRequestHeader('Content-Type', 'application/json');
-
-            xhr.onload = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR completed, status:', xhr.status);
-                }
-                resolve({
-                    ok: xhr.status >= 200 && xhr.status < 300,
-                    status: xhr.status,
-                    json: async () => {
-                        try {
-                            return JSON.parse(xhr.responseText);
-                        } catch (e) {
-                            return { status: xhr.status };
-                        }
-                    }
-                });
-            };
-
-            xhr.onerror = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR error');
-                }
-                reject(new Error('XHR failed'));
-            };
-
-            xhr.ontimeout = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR timeout');
-                }
-                reject(new Error('XHR timeout'));
-            };
-
-            // Timeout de 30 segundos para payloads grandes
-            xhr.timeout = 30000;
-
-            if (debug_formtrace) {
-                console.log('formTrace#XHR sending...');
-            }
-            xhr.send(jsonBody);
-        });
-    }
-
-    // Para payloads pequenos, usar fetch con keepalive
     const options = {
         method: 'POST',
         body: jsonBody,
@@ -9414,10 +9295,15 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
         }
     };
 
-    if (useKeepalive) {
+    // Solo usar keepalive si el payload es pequeno
+    if (useKeepalive && !isPayloadTooLarge) {
         options.keepalive = true;
         if (debug_formtrace) {
-            console.log('formTrace#using fetch with keepalive');
+            console.log('formTrace#using keepalive (payload within limit)');
+        }
+    } else if (useKeepalive && isPayloadTooLarge) {
+        if (debug_formtrace) {
+            console.log('formTrace#NOT using keepalive (payload too large), using normal fetch');
         }
     }
 
@@ -9426,6 +9312,7 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
     }
 
     try {
+        // ESPERAR a que el fetch se complete
         const response = await fetch(formTraceApiSave, options);
 
         if (debug_formtrace) {
@@ -9438,8 +9325,8 @@ async function saveRecordings(dataSubmit, useKeepalive = false) {
             console.log('formTrace#fetch error:', fetchError.message);
         }
 
-        // Fallback a sendBeacon para payloads pequenos
-        if (navigator.sendBeacon) {
+        // Si el fetch falla y el payload es pequeno, intentar sendBeacon
+        if (!isPayloadTooLarge && navigator.sendBeacon) {
             const blob = new Blob([jsonBody], { type: 'text/plain' });
             const success = navigator.sendBeacon(formTraceApiSave, blob);
             if (debug_formtrace) {

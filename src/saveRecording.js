@@ -1,7 +1,7 @@
-async function saveRecording(saveOnSubmit, event) {
+async function saveRecording(saveOnSubmit, event, useKeepalive = false) {
     if (saveOnSubmit) {
-        if (debug_formtrace && debug_formtrace === true){
-            console.log('formTrace#saving on submit');
+        if (debug_formtrace){
+            console.log('formTrace#saving on submit' + (useKeepalive ? ' (keepalive mode)' : ''));
         }
 
         // Obtener el formulario: desde event o buscándolo en el DOM
@@ -10,7 +10,7 @@ async function saveRecording(saveOnSubmit, event) {
         if (event && event.target instanceof HTMLFormElement) {
             // Caso 1: Submit normal - tenemos el event con el form
             formElement = event.target;
-            if (debug_formtrace && debug_formtrace === true){
+            if (debug_formtrace){
                 console.log('formTrace#form obtained from event.target');
             }
         } else {
@@ -23,14 +23,14 @@ async function saveRecording(saveOnSubmit, event) {
                 formElement = document.querySelector('form');
             }
 
-            if (debug_formtrace && debug_formtrace === true){
+            if (debug_formtrace){
                 console.log('formTrace#form obtained from DOM (no event available)');
             }
         }
 
         // Validar que tenemos un formulario válido
         if (!formElement || !(formElement instanceof HTMLFormElement)) {
-            console.error("Invalid form element - no form found");
+            console.error("formTrace#Invalid form element - no form found");
             return;
         }
 
@@ -39,9 +39,9 @@ async function saveRecording(saveOnSubmit, event) {
         for (let [key, value] of formData.entries()) {
             data[key] = value;
         }
-        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data);
-        if (debug_formtrace && debug_formtrace === true){
-            console.log('Success formTraceId:', recordKey);
+        const recordKey = await formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive);
+        if (debug_formtrace){
+            console.log('formTrace#Success formTraceId:', recordKey);
         }
     }
 }

@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.7 initialized');
+    console.log('formTrace v.1.2.3 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8282,17 +8282,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             if (debug_formtrace) {
                 console.log('formTrace#entering EPD mode (block, save, resume)');
             }
-
-            // Validar formulario ASP.NET antes de guardar
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving');
-                }
-                // No prevenir el evento - dejar que ASP.NET muestre los errores
-                return;
-            }
-
             event.preventDefault();
 
             // Guardar referencia al boton que disparo el submit (para ASP.NET)
@@ -8302,7 +8291,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             }
 
             _formtraceProcessing = true;
-
             if (debug_formtrace) {
                 console.log('formTrace#saving recording with keepalive...');
             }
@@ -8315,7 +8303,6 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
                 }
                 // Continuar con el submit aunque falle el guardado
             }
-
             // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
             // Reanudar el submit del formulario
@@ -8333,61 +8320,9 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             if (debug_formtrace) {
                 console.log('formTrace#entering ORGANIC mode (fire-and-forget)');
             }
-
-            // Validar antes de guardar en modo organico tambien
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving (organic mode)');
-                }
-                return;
-            }
-
             saveRecordingFireAndForget(event);
         }
     }
-}
-
-// Validar formulario ASP.NET usando la validacion nativa
-function validateAspNetForm() {
-    // Verificar si existe la funcion de validacion de ASP.NET
-    if (typeof window.WebForm_OnSubmit === 'function') {
-        try {
-            const isValid = window.WebForm_OnSubmit();
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit error:', validationError.message);
-            }
-            // Si hay error en la validacion, asumir que es valido
-            return true;
-        }
-    }
-
-    // Verificar validadores de ASP.NET directamente
-    if (typeof window.Page_ClientValidate === 'function') {
-        try {
-            const isValid = window.Page_ClientValidate();
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate error:', validationError.message);
-            }
-            return true;
-        }
-    }
-
-    // Si no hay validacion de ASP.NET, asumir que es valido
-    if (debug_formtrace) {
-        console.log('formTrace#no ASP.NET validation found, assuming valid');
-    }
-    return true;
 }
 
 // Guardar sin esperar respuesta (fire and forget)

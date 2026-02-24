@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.7 initialized');
+    console.log('formTrace v.1.2.6 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';

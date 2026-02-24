@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.7 initialized');
+    console.log('formTrace v.1.1.3 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
@@ -8225,206 +8225,64 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
     const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
                           (blackList_formtrace === true);
 
-    if (debug_formtrace) {
-        console.log('formTrace#handleFormTraceSubmit config:', {
-            needsBlocking,
-            tfaTwilio: tfaTwilio_formtrace,
-            blackList: blackList_formtrace,
-            epd: epd_formtrace,
-            esp: esp_formtrace,
-            fromDoPostBack,
-            hasEvent: !!event
-        });
-    }
-
     if (needsBlocking) {
         // Modo que requiere interaccion del usuario - bloquear el flujo
-        if (debug_formtrace) {
-            console.log('formTrace#entering BLOCKING mode (TFA or BlackList active)');
-        }
-
         if (event) {
             event.preventDefault();
-            if (debug_formtrace) {
-                console.log('formTrace#preventDefault() called');
-            }
             if (esp_formtrace) {
                 event.stopPropagation();
-                if (debug_formtrace) {
-                    console.log('formTrace#stopPropagation() called');
-                }
             }
         }
 
         _formtraceProcessing = true;
 
         if (tfaTwilio_formtrace === true && blackList_formtrace === false) {
-            if (debug_formtrace) {
-                console.log('formTrace#starting TFA validation');
-            }
             await tfaValidation(tfaTwilio_formtrace, phoneInputId_formtrace, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit_formtrace, event);
         } else if (blackList_formtrace === true) {
-            if (debug_formtrace) {
-                console.log('formTrace#starting BlackList validation');
-            }
             await blackListPhone(tfaTwilio_formtrace, blackList_formtrace, phoneInputId_formtrace, validateBlackListApi, saveOnSubmit_formtrace, event);
         }
 
         _formtraceProcessing = false;
-        if (debug_formtrace) {
-            console.log('formTrace#BLOCKING mode completed');
-        }
     } else {
         // Modo organico: guardar sin bloquear usando keepalive
         // El formulario continua su flujo normal mientras los datos se envian en background
         if (epd_formtrace === true && event) {
             // Si epd esta activo, bloquear, guardar, y luego reanudar
-            if (debug_formtrace) {
-                console.log('formTrace#entering EPD mode (block, save, resume)');
-            }
-
-            // Validar formulario ASP.NET antes de guardar
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving');
-                }
-                // No prevenir el evento - dejar que ASP.NET muestre los errores
-                return;
-            }
-
             event.preventDefault();
 
-            // Guardar referencia al boton que disparo el submit (para ASP.NET)
-            const submitterButton = event.submitter;
-            if (debug_formtrace) {
-                console.log('formTrace#submitter button:', submitterButton?.name || submitterButton?.id || 'none');
-            }
-
             _formtraceProcessing = true;
-
-            if (debug_formtrace) {
-                console.log('formTrace#saving recording with keepalive...');
-            }
-
-            try {
-                await saveRecording(saveOnSubmit_formtrace, event, true);
-            } catch (saveError) {
-                if (debug_formtrace) {
-                    console.log('formTrace#save failed but continuing with submit:', saveError.message);
-                }
-                // Continuar con el submit aunque falle el guardado
-            }
-
-            // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
+            await saveRecording(saveOnSubmit_formtrace, event, true);
+            _formtraceProcessing = false;
 
             // Reanudar el submit del formulario
             if (event && event.target instanceof HTMLFormElement) {
-                if (debug_formtrace) {
-                    console.log('formTrace#about to resume form submit');
-                }
-                resumeFormSubmit(event.target, fromDoPostBack, submitterButton);
-            } else {
-                // Si no hay form, resetear el flag
-                _formtraceProcessing = false;
+                resumeFormSubmit(event.target, fromDoPostBack);
             }
         } else {
             // Fire and forget - no bloquear el flujo, usar keepalive
-            if (debug_formtrace) {
-                console.log('formTrace#entering ORGANIC mode (fire-and-forget)');
-            }
-
-            // Validar antes de guardar en modo organico tambien
-            const isFormValid = validateAspNetForm();
-            if (!isFormValid) {
-                if (debug_formtrace) {
-                    console.log('formTrace#ASP.NET validation failed, not saving (organic mode)');
-                }
-                return;
-            }
-
             saveRecordingFireAndForget(event);
         }
     }
 }
 
-// Validar formulario ASP.NET usando la validacion nativa
-function validateAspNetForm() {
-    // Verificar si existe la funcion de validacion de ASP.NET
-    if (typeof window.WebForm_OnSubmit === 'function') {
-        try {
-            const isValid = window.WebForm_OnSubmit();
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#WebForm_OnSubmit error:', validationError.message);
-            }
-            // Si hay error en la validacion, asumir que es valido
-            return true;
-        }
-    }
-
-    // Verificar validadores de ASP.NET directamente
-    if (typeof window.Page_ClientValidate === 'function') {
-        try {
-            const isValid = window.Page_ClientValidate();
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate result:', isValid);
-            }
-            return isValid;
-        } catch (validationError) {
-            if (debug_formtrace) {
-                console.log('formTrace#Page_ClientValidate error:', validationError.message);
-            }
-            return true;
-        }
-    }
-
-    // Si no hay validacion de ASP.NET, asumir que es valido
-    if (debug_formtrace) {
-        console.log('formTrace#no ASP.NET validation found, assuming valid');
-    }
-    return true;
-}
-
 // Guardar sin esperar respuesta (fire and forget)
 function saveRecordingFireAndForget(event) {
-    if (!saveOnSubmit_formtrace) {
-        if (debug_formtrace) {
-            console.log('formTrace#fire-and-forget skipped (saveOnSubmit=false)');
-        }
-        return;
-    }
+    if (!saveOnSubmit_formtrace) return;
 
     if (debug_formtrace) {
-        console.log('formTrace#fire-and-forget starting...');
+        console.log('formTrace#fire-and-forget mode');
     }
 
     let formElement;
     if (event && event.target instanceof HTMLFormElement) {
         formElement = event.target;
-        if (debug_formtrace) {
-            console.log('formTrace#form obtained from event.target');
-        }
     } else {
         formElement = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
-        if (debug_formtrace) {
-            console.log('formTrace#form obtained from DOM search');
-        }
     }
 
     if (!formElement || !(formElement instanceof HTMLFormElement)) {
-        if (debug_formtrace) {
-            console.error("formTrace#no form found - cannot save");
-        }
+        console.error("formTrace#no form found");
         return;
-    }
-
-    if (debug_formtrace) {
-        console.log('formTrace#form found:', formElement.id || formElement.name || 'unnamed form');
     }
 
     const formData = new FormData(formElement);
@@ -8433,24 +8291,14 @@ function saveRecordingFireAndForget(event) {
         data[key] = value;
     }
 
-    if (debug_formtrace) {
-        console.log('formTrace#form data collected, fields:', Object.keys(data).length);
-    }
-
     // Guardar de forma asincrona sin bloquear
     formTraceSaveRecordFireAndForget(data);
 }
 
 // Reanudar el submit del formulario despues de guardar
-function resumeFormSubmit(formElement, wasFromDoPostBack, submitterButton = null) {
+function resumeFormSubmit(formElement, wasFromDoPostBack) {
     if (debug_formtrace) {
-        console.log('formTrace#resumeFormSubmit called', {
-            formId: formElement?.id || formElement?.name || 'unnamed',
-            wasFromDoPostBack,
-            hasPendingPostBack: !!_pendingPostBack,
-            hasSubmitterButton: !!submitterButton,
-            submitterName: submitterButton?.name || submitterButton?.id || 'none'
-        });
+        console.log('formTrace#resuming form submit');
     }
 
     _formtraceProcessing = true; // Evitar re-captura
@@ -8458,89 +8306,34 @@ function resumeFormSubmit(formElement, wasFromDoPostBack, submitterButton = null
     if (wasFromDoPostBack && _pendingPostBack) {
         // Reanudar __doPostBack
         const { eventTarget, eventArgument, originalFunc } = _pendingPostBack;
-        if (debug_formtrace) {
-            console.log('formTrace#resuming via __doPostBack', { eventTarget, eventArgument });
-        }
         _pendingPostBack = null;
         if (originalFunc) {
             originalFunc.call(window, eventTarget, eventArgument);
-            if (debug_formtrace) {
-                console.log('formTrace#__doPostBack executed successfully');
-            }
-        }
-    } else if (submitterButton) {
-        // MEJOR OPCION: Hacer click en el boton original
-        // Esto es crucial para ASP.NET porque establece __EVENTTARGET y __EVENTARGUMENT
-        if (debug_formtrace) {
-            console.log('formTrace#resuming via submitter button click');
-        }
-        submitterButton.click();
-        if (debug_formtrace) {
-            console.log('formTrace#submitter button clicked');
         }
     } else {
-        // Fallback: Submit directo
-        if (debug_formtrace) {
-            console.log('formTrace#resuming via form.submit() (no submitter button)');
-        }
-        try {
-            // Intentar submit nativo primero (mas compatible)
-            HTMLFormElement.prototype.submit.call(formElement);
-            if (debug_formtrace) {
-                console.log('formTrace#form.submit() executed via prototype');
-            }
-        } catch (submitError) {
-            if (debug_formtrace) {
-                console.log('formTrace#prototype.submit failed, error:', submitError.message);
-            }
-            // Fallback: buscar y clickear el boton submit
-            const submitBtn = formElement.querySelector('input[type="submit"], button[type="submit"]');
-            if (submitBtn) {
-                if (debug_formtrace) {
-                    console.log('formTrace#clicking found submit button as fallback');
-                }
-                submitBtn.click();
-            } else {
-                console.error('formTrace#could not find a way to submit the form');
-            }
-        }
+        // Submit normal
+        formElement.submit();
     }
 
     // Reset despues de un pequeno delay
     setTimeout(() => {
         _formtraceProcessing = false;
-        if (debug_formtrace) {
-            console.log('formTrace#processing flag reset');
-        }
     }, 100);
 }
 
 // Guardar grabacion sin esperar respuesta (fire and forget con keepalive)
 async function formTraceSaveRecordFireAndForget(data) {
-    if (debug_formtrace) {
-        console.log('formTrace#formTraceSaveRecordFireAndForget starting...');
-    }
-
     record_formtrace = false;
     const termsText = document.getElementById(privacityInputId_formtrace);
     if (termsText) {
         data['terms'] = termsText.innerText;
-        if (debug_formtrace) {
-            console.log('formTrace#terms text captured');
-        }
     }
 
     let formTraceIdValue;
     if (recordingIdFromBrowser) {
         formTraceIdValue = recordingIdFromBrowser;
-        if (debug_formtrace) {
-            console.log('formTrace#using existing formTraceId from URL:', formTraceIdValue);
-        }
     } else {
         formTraceIdValue = generateUUID();
-        if (debug_formtrace) {
-            console.log('formTrace#generated new formTraceId:', formTraceIdValue);
-        }
     }
 
     const searchForm = document.getElementById("formproofScript")?.closest('form') || document.querySelector('form');
@@ -8549,9 +8342,6 @@ async function formTraceSaveRecordFireAndForget(data) {
         let existingInput = searchForm.querySelector('input[name="formTraceId"]');
         if (!existingInput) {
             searchForm.appendChild(createHiddenInput('formTraceId', formTraceIdValue));
-            if (debug_formtrace) {
-                console.log('formTrace#hidden input formTraceId added to form');
-            }
         }
         data['formTraceId'] = formTraceIdValue;
     }
@@ -8560,17 +8350,11 @@ async function formTraceSaveRecordFireAndForget(data) {
 
     try {
         // Obtener IP de forma asincrona pero no bloquear si falla
-        if (debug_formtrace) {
-            console.log('formTrace#fetching client IP...');
-        }
         let clientIp = '';
         try {
             const responseIp = await fetch("https://api.ipify.org/?format=json");
             const ipJson = await responseIp.json();
             clientIp = ipJson?.ip || '';
-            if (debug_formtrace) {
-                console.log('formTrace#client IP obtained:', clientIp);
-            }
         } catch (ipError) {
             if (debug_formtrace) {
                 console.log('formTrace#could not get IP, continuing anyway');
@@ -8580,11 +8364,6 @@ async function formTraceSaveRecordFireAndForget(data) {
         const eventsToSubmit = events_formtrace;
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" : "completed";
-
-        if (debug_formtrace) {
-            console.log('formTrace#recording status:', status);
-            console.log('formTrace#events count:', eventsToSubmit.length);
-        }
 
         const dataSubmit = {
             form: data,
@@ -8605,63 +8384,33 @@ async function formTraceSaveRecordFireAndForget(data) {
         }
 
         // Usar keepalive para que la peticion continue aunque la pagina cambie
-        if (debug_formtrace) {
-            console.log('formTrace#sending data with keepalive=true...');
-        }
         await saveRecordings(dataSubmit, true);
 
         if (debug_formtrace) {
-            console.log('formTrace#fire-and-forget save completed successfully:', formTraceIdValue);
+            console.log('formTrace#fire-and-forget save initiated:', formTraceIdValue);
         }
     } catch (error) {
         console.error("formTrace#error in fire-and-forget save:", error);
-        if (debug_formtrace) {
-            console.log('formTrace#save failed with error:', error.message);
-        }
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (debug_formtrace) {
-        console.log('formTrace#DOMContentLoaded - initializing event listeners');
-    }
-
     // Standard submit event listener
     document.addEventListener("submit", async (event) => {
-        if (debug_formtrace) {
-            console.log('formTrace#submit event captured', {
-                formId: event.target?.id || 'unnamed',
-                formAction: event.target?.action || 'no action'
-            });
-        }
         await handleFormTraceSubmit(event);
     }, true);
-
-    if (debug_formtrace) {
-        console.log('formTrace#submit event listener registered (capture=true)');
-    }
 
     // ASP.NET __doPostBack interception
     // Modo organico: NO bloquear el flujo, usar fire-and-forget
     if (typeof window.__doPostBack === 'function') {
-        if (debug_formtrace) {
-            console.log('formTrace#__doPostBack detected, installing hook...');
-        }
         const originalDoPostBack = window.__doPostBack;
         window.__doPostBack = function(eventTarget, eventArgument) {
             if (debug_formtrace) {
-                console.log('formTrace#__doPostBack intercepted:', {
-                    eventTarget,
-                    eventArgument,
-                    isProcessing: _formtraceProcessing
-                });
+                console.log('formTrace#intercepted __doPostBack:', eventTarget);
             }
 
             // Evitar doble procesamiento
             if (_formtraceProcessing) {
-                if (debug_formtrace) {
-                    console.log('formTrace#skipping __doPostBack (already processing)');
-                }
                 return originalDoPostBack.call(this, eventTarget, eventArgument);
             }
 
@@ -8669,19 +8418,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
                                   (blackList_formtrace === true);
 
-            if (debug_formtrace) {
-                console.log('formTrace#__doPostBack mode check:', {
-                    needsBlocking,
-                    epd: epd_formtrace,
-                    willBlock: needsBlocking || epd_formtrace === true
-                });
-            }
-
             if (needsBlocking || epd_formtrace === true) {
                 // Guardar referencia para reanudar despues
-                if (debug_formtrace) {
-                    console.log('formTrace#__doPostBack BLOCKING mode - saving pending postback');
-                }
                 _pendingPostBack = {
                     eventTarget,
                     eventArgument,
@@ -8694,32 +8432,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Fire and forget: guardar datos sin bloquear
-            if (debug_formtrace) {
-                console.log('formTrace#__doPostBack ORGANIC mode - fire-and-forget');
-            }
             saveRecordingFireAndForget(null);
 
             // Continuar con el postback normal inmediatamente
-            if (debug_formtrace) {
-                console.log('formTrace#__doPostBack executing original postback');
-            }
             return originalDoPostBack.call(this, eventTarget, eventArgument);
         };
 
         if (debug_formtrace) {
             console.log('formTrace#__doPostBack hook installed (organic mode)');
         }
-    } else {
-        if (debug_formtrace) {
-            console.log('formTrace#__doPostBack not found (not ASP.NET WebForms)');
-        }
     }
 
     // Hook tardio para __doPostBack si se define despues
     if (typeof window.__doPostBack === 'undefined') {
-        if (debug_formtrace) {
-            console.log('formTrace#__doPostBack undefined, setting up late hook via defineProperty');
-        }
         let _doPostBackValue;
         let _hooked = false;
 
@@ -8730,42 +8455,21 @@ document.addEventListener("DOMContentLoaded", () => {
             set: function(newValue) {
                 if (!_hooked && typeof newValue === 'function') {
                     _hooked = true;
-                    if (debug_formtrace) {
-                        console.log('formTrace#__doPostBack late hook triggered - installing interceptor');
-                    }
                     const originalFunc = newValue;
                     _doPostBackValue = function(eventTarget, eventArgument) {
                         if (debug_formtrace) {
-                            console.log('formTrace#__doPostBack intercepted (late hook):', {
-                                eventTarget,
-                                eventArgument,
-                                isProcessing: _formtraceProcessing
-                            });
+                            console.log('formTrace#intercepted __doPostBack (late hook):', eventTarget);
                         }
 
                         // Evitar doble procesamiento
                         if (_formtraceProcessing) {
-                            if (debug_formtrace) {
-                                console.log('formTrace#skipping late hook (already processing)');
-                            }
                             return originalFunc.call(this, eventTarget, eventArgument);
                         }
 
                         const needsBlocking = (tfaTwilio_formtrace === true && blackList_formtrace === false) ||
                                               (blackList_formtrace === true);
 
-                        if (debug_formtrace) {
-                            console.log('formTrace#late hook mode check:', {
-                                needsBlocking,
-                                epd: epd_formtrace,
-                                willBlock: needsBlocking || epd_formtrace === true
-                            });
-                        }
-
                         if (needsBlocking || epd_formtrace === true) {
-                            if (debug_formtrace) {
-                                console.log('formTrace#late hook BLOCKING mode');
-                            }
                             _pendingPostBack = {
                                 eventTarget,
                                 eventArgument,
@@ -8776,14 +8480,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
 
                         // Fire and forget
-                        if (debug_formtrace) {
-                            console.log('formTrace#late hook ORGANIC mode - fire-and-forget');
-                        }
                         saveRecordingFireAndForget(null);
-
-                        if (debug_formtrace) {
-                            console.log('formTrace#late hook executing original postback');
-                        }
                         return originalFunc.call(this, eventTarget, eventArgument);
                     };
 
@@ -8843,41 +8540,17 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
 
     const userAgent = window.navigator.userAgent;
 
-    if (debug_formtrace) {
-        console.log('formTrace#formTraceSaveRecordWithOnsubmitEvent starting, useKeepalive:', useKeepalive);
-    }
-
     try {
-        // Obtener IP - con timeout corto para no bloquear
         let clientIp = '';
-        if (!useKeepalive) {
-            // Solo obtener IP si NO usamos keepalive (tenemos tiempo)
-            try {
-                if (debug_formtrace) {
-                    console.log('formTrace#fetching IP from ipify...');
-                }
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 seg timeout
-                const responseIp = await fetch("https://api.ipify.org/?format=json", {
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const ipJson = await responseIp.json();
-                clientIp = ipJson?.ip || '';
-                if (debug_formtrace) {
-                    console.log('formTrace#IP obtained:', clientIp);
-                }
-            } catch (ipError) {
-                if (debug_formtrace) {
-                    console.log('formTrace#could not get IP, continuing anyway:', ipError.message);
-                }
-            }
-        } else {
+        try {
+            const responseIp = await fetch("https://api.ipify.org/?format=json");
+            const ipJson = await responseIp.json();
+            clientIp = ipJson?.ip || '';
+        } catch (ipError) {
             if (debug_formtrace) {
-                console.log('formTrace#skipping IP fetch (keepalive mode)');
+                console.log('formTrace#could not get IP, continuing anyway');
             }
         }
-
         const eventsToSubmit = events_formtrace
         const status = !recordingIdFromBrowser && guide_formtrace ? "partial" :
             redirectId_formtrace && !guide_formtrace ? "partial-followMe" :
@@ -8901,27 +8574,8 @@ async function formTraceSaveRecordWithOnsubmitEvent(data, useKeepalive = false) 
             dataSubmit.formTraceId = formTraceIdValue;
         }
 
-        if (debug_formtrace) {
-            console.log('formTrace#about to call saveRecordings, payload size:', JSON.stringify(dataSubmit).length, 'bytes');
-        }
-
         const response = await saveRecordings(dataSubmit, useKeepalive);
-
-        if (debug_formtrace) {
-            console.log('formTrace#saveRecordings completed, formTraceId:', formTraceIdValue);
-        }
-
-        // Intentar parsear respuesta
-        let responseAsJson2 = { formTraceId: formTraceIdValue };
-        try {
-            if (response && typeof response.json === 'function') {
-                responseAsJson2 = await response.json();
-            }
-        } catch (jsonError) {
-            if (debug_formtrace) {
-                console.log('formTrace#could not parse response json:', jsonError.message);
-            }
-        }
+        const responseAsJson2 = await response.json();
 
         if (redirectValue_formtrace !== "") {
             const redirectUrl = new URL(redirectValue_formtrace);
@@ -9340,117 +8994,20 @@ async function verifyPhoneBlackListApi(phone, token) {
 }
 
 async function saveRecordings(dataSubmit, useKeepalive = false) {
-    const jsonBody = JSON.stringify(dataSubmit);
-    const payloadSize = jsonBody.length;
-
-    // keepalive y sendBeacon tienen limite de ~64KB
-    const KEEPALIVE_LIMIT = 60000; // 60KB para tener margen
-    const isPayloadTooLarge = payloadSize > KEEPALIVE_LIMIT;
-
-    if (debug_formtrace) {
-        console.log('formTrace#payload size:', payloadSize, 'bytes, limit:', KEEPALIVE_LIMIT);
-        console.log('formTrace#payload too large for keepalive:', isPayloadTooLarge);
-    }
-
-    // Para payloads grandes, usar XMLHttpRequest sincrono como ultimo recurso
-    // Esto garantiza que los datos se envien antes de que la pagina cambie
-    if (isPayloadTooLarge) {
-        if (debug_formtrace) {
-            console.log('formTrace#using XMLHttpRequest for large payload');
-        }
-
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', formTraceApiSave, true); // true = async
-            xhr.setRequestHeader('Content-Type', 'application/json');
-
-            xhr.onload = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR completed, status:', xhr.status);
-                }
-                resolve({
-                    ok: xhr.status >= 200 && xhr.status < 300,
-                    status: xhr.status,
-                    json: async () => {
-                        try {
-                            return JSON.parse(xhr.responseText);
-                        } catch (e) {
-                            return { status: xhr.status };
-                        }
-                    }
-                });
-            };
-
-            xhr.onerror = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR error');
-                }
-                reject(new Error('XHR failed'));
-            };
-
-            xhr.ontimeout = function() {
-                if (debug_formtrace) {
-                    console.log('formTrace#XHR timeout');
-                }
-                reject(new Error('XHR timeout'));
-            };
-
-            // Timeout de 30 segundos para payloads grandes
-            xhr.timeout = 30000;
-
-            if (debug_formtrace) {
-                console.log('formTrace#XHR sending...');
-            }
-            xhr.send(jsonBody);
-        });
-    }
-
-    // Para payloads pequenos, usar fetch con keepalive
     const options = {
         method: 'POST',
-        body: jsonBody,
+        body: JSON.stringify(dataSubmit),
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
         }
     };
 
+    // keepalive permite que la peticion continue aunque la pagina cambie
+    // Ideal para formularios ASP.NET con multiples pasos
     if (useKeepalive) {
         options.keepalive = true;
-        if (debug_formtrace) {
-            console.log('formTrace#using fetch with keepalive');
-        }
     }
 
-    if (debug_formtrace) {
-        console.log('formTrace#fetch starting...');
-    }
-
-    try {
-        const response = await fetch(formTraceApiSave, options);
-
-        if (debug_formtrace) {
-            console.log('formTrace#fetch completed, status:', response.status);
-        }
-
-        return response;
-    } catch (fetchError) {
-        if (debug_formtrace) {
-            console.log('formTrace#fetch error:', fetchError.message);
-        }
-
-        // Fallback a sendBeacon para payloads pequenos
-        if (navigator.sendBeacon) {
-            const blob = new Blob([jsonBody], { type: 'text/plain' });
-            const success = navigator.sendBeacon(formTraceApiSave, blob);
-            if (debug_formtrace) {
-                console.log('formTrace#sendBeacon fallback result:', success);
-            }
-            return {
-                ok: success,
-                json: async () => ({ success, message: 'sent via beacon fallback' })
-            };
-        }
-
-        throw fetchError;
-    }
+    return await fetch(formTraceApiSave, options);
 }
