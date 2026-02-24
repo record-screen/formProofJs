@@ -8284,19 +8284,36 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
             }
             event.preventDefault();
 
+            // Guardar referencia al boton que disparo el submit (para ASP.NET)
+            const submitterButton = event.submitter;
+            if (debug_formtrace) {
+                console.log('formTrace#submitter button:', submitterButton?.name || submitterButton?.id || 'none');
+            }
+
             _formtraceProcessing = true;
             if (debug_formtrace) {
                 console.log('formTrace#saving recording with keepalive...');
             }
-            await saveRecording(saveOnSubmit_formtrace, event, true);
-            _formtraceProcessing = false;
+
+            try {
+                await saveRecording(saveOnSubmit_formtrace, event, true);
+            } catch (saveError) {
+                if (debug_formtrace) {
+                    console.log('formTrace#save failed but continuing with submit:', saveError.message);
+                }
+                // Continuar con el submit aunque falle el guardado
+            }
+            // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
             // Reanudar el submit del formulario
             if (event && event.target instanceof HTMLFormElement) {
                 if (debug_formtrace) {
                     console.log('formTrace#about to resume form submit');
                 }
-                resumeFormSubmit(event.target, fromDoPostBack);
+                resumeFormSubmit(event.target, fromDoPostBack, submitterButton);
+            } else {
+                // Si no hay form, resetear el flag
+                _formtraceProcessing = false;
             }
         } else {
             // Fire and forget - no bloquear el flujo, usar keepalive
@@ -8360,12 +8377,14 @@ function saveRecordingFireAndForget(event) {
 }
 
 // Reanudar el submit del formulario despues de guardar
-function resumeFormSubmit(formElement, wasFromDoPostBack) {
+function resumeFormSubmit(formElement, wasFromDoPostBack, submitterButton = null) {
     if (debug_formtrace) {
         console.log('formTrace#resumeFormSubmit called', {
-            formId: formElement?.id || 'unnamed',
+            formId: formElement?.id || formElement?.name || 'unnamed',
             wasFromDoPostBack,
-            hasPendingPostBack: !!_pendingPostBack
+            hasPendingPostBack: !!_pendingPostBack,
+            hasSubmitterButton: !!submitterButton,
+            submitterName: submitterButton?.name || submitterButton?.id || 'none'
         });
     }
 
@@ -8384,12 +8403,20 @@ function resumeFormSubmit(formElement, wasFromDoPostBack) {
                 console.log('formTrace#__doPostBack executed successfully');
             }
         }
-    } else {
-        // Submit normal
-        // Usar HTMLFormElement.prototype.submit.call() para evitar conflicto
-        // cuando hay un elemento con name="submit" que sobrescribe el metodo nativo
+    } else if (submitterButton) {
+        // MEJOR OPCION: Hacer click en el boton original
+        // Esto es crucial para ASP.NET porque establece __EVENTTARGET y __EVENTARGUMENT
         if (debug_formtrace) {
-            console.log('formTrace#resuming via form.submit()');
+            console.log('formTrace#resuming via submitter button click');
+        }
+        submitterButton.click();
+        if (debug_formtrace) {
+            console.log('formTrace#submitter button clicked');
+        }
+    } else {
+        // Fallback: Submit directo
+        if (debug_formtrace) {
+            console.log('formTrace#resuming via form.submit() (no submitter button)');
         }
         try {
             // Intentar submit nativo primero (mas compatible)
@@ -8399,22 +8426,17 @@ function resumeFormSubmit(formElement, wasFromDoPostBack) {
             }
         } catch (submitError) {
             if (debug_formtrace) {
-                console.log('formTrace#prototype.submit failed, trying direct submit');
+                console.log('formTrace#prototype.submit failed, error:', submitError.message);
             }
-            // Fallback: intentar submit directo
-            if (typeof formElement.submit === 'function') {
-                formElement.submit();
-            } else {
-                // Ultimo recurso: buscar y clickear el boton submit
-                const submitBtn = formElement.querySelector('input[type="submit"], button[type="submit"]');
-                if (submitBtn) {
-                    if (debug_formtrace) {
-                        console.log('formTrace#clicking submit button as fallback');
-                    }
-                    submitBtn.click();
-                } else {
-                    console.error('formTrace#could not find a way to submit the form');
+            // Fallback: buscar y clickear el boton submit
+            const submitBtn = formElement.querySelector('input[type="submit"], button[type="submit"]');
+            if (submitBtn) {
+                if (debug_formtrace) {
+                    console.log('formTrace#clicking found submit button as fallback');
                 }
+                submitBtn.click();
+            } else {
+                console.error('formTrace#could not find a way to submit the form');
             }
         }
     }
