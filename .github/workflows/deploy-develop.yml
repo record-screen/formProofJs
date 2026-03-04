@@ -43,8 +43,8 @@ jobs:
             echo "No changes to commit"
           else
             VERSION=$(node -p "require('./package.json').version")
-            git commit -m "🚀 Auto-deploy: Build staging v${VERSION} [skip ci]"
-            git push origin staging
+            git commit -m "🚀 Auto-deploy: Build develop v${VERSION} [skip ci]"
+            git push origin develop
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
