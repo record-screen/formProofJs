@@ -18,7 +18,7 @@ const formProofEnvironmentApis = {
     staging: 'https://splendid-binary-uynxj.ampt.app/api',
     production: 'https://distributed-idea-tqljq.ampt.app/api',
     localMarco: 'https://novel-hack-d4iyn.ampt.app/api',
-    develop: 'https://sharp-data-gqcuy.ampt.app'
+    develop: 'https://sharp-data-gqcuy.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
