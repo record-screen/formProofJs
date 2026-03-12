@@ -1,11 +1,12 @@
 {
   "name": "liveprintjs",
-  "version": "1.2.7",
+  "version": "1.2.9",
   "description": "Script for record your screen",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildStaging": "gulp buildStaging",
+    "buildDevelop": "gulp buildDevelop",
     "buildProduction": "gulp buildProduction",
     "push-changes": "git push"
   },

@@ -17,7 +17,8 @@ const formProofEnvironmentApis = {
     local: 'https://bright-api-2n99o.ampt.app/api',
     staging: 'https://splendid-binary-uynxj.ampt.app/api',
     production: 'https://distributed-idea-tqljq.ampt.app/api',
-    localMarco: 'https://novel-hack-d4iyn.ampt.app/api'
+    localMarco: 'https://novel-hack-d4iyn.ampt.app/api',
+    develop: 'https://sharp-data-gqcuy.ampt.app/api'
 };
 
 function build(apiEnvironment, cb) {
@@ -72,6 +73,10 @@ function buildStaging(cb) {
     build('staging', cb);
 }
 
+function buildDevelop(cb) {
+    build('develop', cb);
+}
+
 function buildProduction(cb) {
     build('production', cb);
 }
@@ -115,11 +120,13 @@ exports.build = build;
 exports.buildStaging = buildStaging;
 exports.buildProduction = buildProduction;
 exports.buildLocalMarco = buildLocalMarco;
+exports.buildDevelop = buildDevelop;
 exports.buildBlackList = buildBlackList;
 exports.watch = watch;
 exports.watchBuildBlackList = watchBuildBlackList;
 
 exports.default = series(build);
+exports.default = series(buildDevelop);
 exports.default = series(buildStaging);
 exports.default = series(buildProduction);
 exports.default = series(buildLocalMarco);

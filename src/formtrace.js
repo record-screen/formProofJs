@@ -237,8 +237,14 @@ async function handleFormTraceSubmit(event, fromDoPostBack = false) {
 
             // NO resetear _formtraceProcessing aqui - resumeFormSubmit lo hara
 
-            // Reanudar el submit del formulario
-            if (event && event.target instanceof HTMLFormElement) {
+            // Reanudar el submit del formulario SOLO si no hay redirect configurado
+            // Si hay redirectValue_formtrace, el redirect ya se hizo en saveRecording
+            if (redirectValue_formtrace) {
+                if (debug_formtrace) {
+                    console.log('formTrace#skipping resumeFormSubmit (redirect configured)');
+                }
+                _formtraceProcessing = false;
+            } else if (event && event.target instanceof HTMLFormElement) {
                 if (debug_formtrace) {
                     console.log('formTrace#about to resume form submit');
                 }

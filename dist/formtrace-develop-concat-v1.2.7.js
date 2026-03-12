@@ -8100,7 +8100,7 @@ let guide_formtrace = ''
 let callback_formtrace = ''
 let formTraceId = ''
 let debug_formtrace = false;
-let baseApi_formtrace = 'https://novel-hack-d4iyn.ampt.app/api'
+let baseApi_formtrace = 'https://sharp-data-gqcuy.ampt.app'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 let epd_formtrace = '';
 let esp_formtrace = '';
@@ -8145,7 +8145,7 @@ const validateTfCodeApi = `${baseApi_formtrace}/tfa/validate`;
 const validateBlackListApi = `${baseApi_formtrace}/blacklist`;
 
 if (automaticRecord_formtrace) {
-    console.log('formTrace v.1.2.81 initialized');
+    console.log('formTrace v.1.2.7 initialized');
     const hiddenFormTrace = document.getElementById(redirectId_formtrace);
     if (hiddenFormTrace?.value) {
         redirectValue_formtrace = hiddenFormTrace.value || '';
