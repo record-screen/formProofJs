@@ -4671,7 +4671,7 @@ const scriptElement = document.getElementById("formproofScript");
 let token_formtrace = "", automaticRecord_formtrace = !0, saveOnSubmit_formtrace = !0, keepVideo_formtrace = !1,
     tfaTwilio_formtrace = !1, blackList_formtrace = !1, phoneInputId_formtrace = "", privacityInputId_formtrace = "",
     guide_formtrace = "", callback_formtrace = "", formTraceId = "", debug_formtrace = !1,
-    baseApi_formtrace = "https://splendid-binary-uynxj.ampt.app/api",
+    baseApi_formtrace = "https://formtrace-api-staging.aurionx.ai/api",
     regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/, epd_formtrace = "", esp_formtrace = "",
     redirectId_formtrace = "";
 const urlParamsBrowser = new URLSearchParams(window.location.search),
