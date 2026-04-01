@@ -14,11 +14,11 @@ function installDependencies(cb) {
 }
 
 const formProofEnvironmentApis = {
-    local: 'https://bright-api-2n99o.ampt.app/api',
-    staging: 'https://splendid-binary-uynxj.ampt.app/api',
-    production: 'https://distributed-idea-tqljq.ampt.app/api',
+    local: 'http://localhost:3020/api',
+    staging: 'https://formtrace-api-staging.aurionx.ai/api',
+    production: 'https://formtrace-api.aurionx.ai/api',
     localMarco: 'https://novel-hack-d4iyn.ampt.app/api',
-    develop: 'https://sharp-data-gqcuy.ampt.app/api'
+    develop: 'https://formtrace-api-develop.aurionx.ai/api'
 };
 
 function build(apiEnvironment, cb) {
