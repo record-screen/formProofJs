@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASP.NET __doPostBack Test - FormProof</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; background-color: #f5f5f5; }
+        .test-container { max-width: 900px; margin: 0 auto; }
+        .card { margin-bottom: 20px; }
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            min-height: 150px;
+        }
+        .log-info { color: #4fc1ff; }
+        .log-success { color: #89d185; }
+        .log-error { color: #f48771; }
+        .log-warning { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+<div class="test-container">
+    <h1 class="mb-4">ASP.NET __doPostBack Test</h1>
+
+    <div class="alert alert-info">
+        <h5>Problem Explanation:</h5>
+        <p>In ASP.NET WebForms, <code>__doPostBack()</code> calls <code>form.submit()</code> programmatically.</p>
+        <p><strong>Critical Issue:</strong> <code>form.submit()</code> does NOT trigger the <code>submit</code> event listener!</p>
+        <p>This means the FormProof script's submit handler never fires when using __doPostBack.</p>
+    </div>
+
+    <div class="row">
+        <!-- Test 1: Normal Submit -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <strong>Test 1: Normal Submit (Works)</strong>
+                </div>
+                <div class="card-body">
+                    <form id="normalForm" name="normalForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name:</label>
+                            <input type="text" class="form-control" name="name" value="John Doe">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <input type="email" class="form-control" name="email" value="john@example.com">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Normal Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: __doPostBack (Problem) -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <strong>Test 2: __doPostBack (Problem)</strong>
+                </div>
+                <div class="card-body">
+                    <form id="aspnetForm" name="aspnetForm">
+                        <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+                        <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+                        <input type="hidden" name="__VIEWSTATE" value="test_viewstate">
+
+                        <div class="mb-3">
+                            <label class="form-label">Name:</label>
+                            <input type="text" class="form-control" name="name" value="Jane Doe">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <input type="email" class="form-control" name="email" value="jane@example.com">
+                        </div>
+                        <button type="button" class="btn btn-danger w-100" onclick="__doPostBack('btnSubmit', '')">
+                            Simulate __doPostBack
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test 3: Solution with onsubmit attribute -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <strong>Test 3: Solution - Using onsubmit attribute (Recommended for ASP.NET)</strong>
+        </div>
+        <div class="card-body">
+            <form id="solutionForm" name="solutionForm" onsubmit="return handleFormSubmit(event)">
+                <input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET2" value="">
+                <input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT2" value="">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Name:</label>
+                        <input type="text" class="form-control" name="name" value="Solution Test">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email:</label>
+                        <input type="email" class="form-control" name="email" value="solution@example.com">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-warning w-100" onclick="__doPostBackWithHook('btnSubmit2', '')">
+                            __doPostBack with Hook
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary w-100">Normal Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Console Output -->
+    <div class="card">
+        <div class="card-header">
+            <strong>Console Output</strong>
+            <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearConsole()">Clear</button>
+        </div>
+        <div class="card-body">
+            <div class="console-output" id="consoleOutput">Ready for testing...</div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="alert alert-warning">
+        <h5>Solution for ASP.NET Integration:</h5>
+        <p>To make FormProof work with ASP.NET __doPostBack, you need to either:</p>
+        <ol>
+            <li><strong>Override __doPostBack</strong> - Intercept the function and dispatch a submit event before calling the original</li>
+            <li><strong>Use form.onsubmit attribute</strong> - ASP.NET respects the onsubmit attribute even with programmatic submit</li>
+            <li><strong>Hook into requestSubmit()</strong> - Modern browsers support this which DOES trigger the submit event</li>
+        </ol>
+    </div>
+</div>
+
+<!-- FormProof Script - Using local version for testing -->
+<script id="formproofScript"
+    src="dist/formtrace-staging-v1.1.1.js?token=jd7bgmtd62rwp5r8aj5bzj1g8d7jmnek&tfaTwilio=false&blackList=false&epd=true&esp=false&debug=true"
+    crossorigin="anonymous"></script>
+
+<script>
+    // Console logging utility
+    function log(message, type = 'info') {
+        const consoleEl = document.getElementById('consoleOutput');
+        const timestamp = new Date().toLocaleTimeString();
+        const colorClass = {
+            info: 'log-info',
+            success: 'log-success',
+            error: 'log-error',
+            warning: 'log-warning'
+        }[type] || 'log-info';
+
+        if (consoleEl.textContent === 'Ready for testing...') {
+            consoleEl.innerHTML = '';
+        }
+
+        consoleEl.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+
+        // Also log to browser console
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    function clearConsole() {
+        document.getElementById('consoleOutput').innerHTML = 'Console cleared...';
+    }
+
+    // ASP.NET __doPostBack simulation (ORIGINAL - has problem)
+    function __doPostBack(eventTarget, eventArgument) {
+        log('__doPostBack called with: ' + eventTarget, 'warning');
+        log('This will call form.submit() directly...', 'warning');
+
+        var theForm = document.forms['aspnetForm'];
+        if (!theForm) {
+            theForm = document.getElementById('aspnetForm');
+        }
+
+        document.getElementById('__EVENTTARGET').value = eventTarget;
+        document.getElementById('__EVENTARGUMENT').value = eventArgument;
+
+        log('Calling theForm.submit()...', 'warning');
+        log('PROBLEM: This does NOT trigger submit event listener!', 'error');
+
+        // This does NOT trigger the 'submit' event listener!
+        // theForm.submit();  // Commented out to prevent actual submission
+
+        log('If this were real, the page would submit WITHOUT FormProof capturing it!', 'error');
+        log('The saveRecording() function would NEVER be called.', 'error');
+    }
+
+    // Solution: __doPostBack with hook
+    function __doPostBackWithHook(eventTarget, eventArgument) {
+        log('__doPostBackWithHook called with: ' + eventTarget, 'info');
+
+        var theForm = document.forms['solutionForm'];
+        if (!theForm) {
+            theForm = document.getElementById('solutionForm');
+        }
+
+        document.getElementById('__EVENTTARGET2').value = eventTarget;
+        document.getElementById('__EVENTARGUMENT2').value = eventArgument;
+
+        log('Using requestSubmit() instead of submit()...', 'success');
+
+        // Solution 1: Use requestSubmit() - triggers submit event!
+        if (typeof theForm.requestSubmit === 'function') {
+            log('requestSubmit() available - this WILL trigger submit event!', 'success');
+            // theForm.requestSubmit();  // Commented to prevent actual submission
+            log('FormProof would capture this submission correctly!', 'success');
+        } else {
+            // Fallback for older browsers: dispatch submit event manually
+            log('Fallback: Manually dispatching submit event...', 'warning');
+            var submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            theForm.dispatchEvent(submitEvent);
+            log('Event dispatched - FormProof should capture it!', 'success');
+        }
+    }
+
+    // Handler for onsubmit attribute approach
+    function handleFormSubmit(event) {
+        log('handleFormSubmit called via onsubmit attribute', 'success');
+        log('event.target: ' + (event?.target?.id || 'undefined'), 'info');
+
+        // This is where you would call saveRecording
+        // The onsubmit attribute IS called even with form.submit()
+
+        // For testing, prevent actual submission
+        if (event) {
+            event.preventDefault();
+        }
+
+        log('Form submission handled successfully!', 'success');
+        return false; // Prevent actual submission for testing
+    }
+
+    // Monitor all submit events on the document
+    document.addEventListener('submit', function(event) {
+        log('Document submit event captured!', 'success');
+        log('event.target.id: ' + event.target.id, 'info');
+        log('This is where FormProof would process the form.', 'info');
+
+        // Prevent actual submission for testing
+        event.preventDefault();
+    }, true);
+
+    // Check if FormProof loaded correctly
+    window.addEventListener('load', function() {
+        log('Page loaded', 'info');
+
+        if (document.getElementById('formproofScript')) {
+            log('FormProof script element found', 'success');
+        } else {
+            log('FormProof script element NOT found!', 'error');
+        }
+
+        log('Ready for testing. Try the different buttons to see the behavior.', 'info');
+        log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+    });
+</script>
+</body>
+</html>
