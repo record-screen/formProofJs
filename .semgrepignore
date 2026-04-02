@@ -1,0 +1,16 @@
+# Test and demo files
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
+Demo.html
+MultiplePage1.html
+MultiplePage2.html
+MultiplePage3.html
+OnePageMultipleForm.html
+SinglePage.html
+testTailwind.html
+TestASPNetDoPostBack.html
+TestDoPostBackFix.html
+TestModal.html

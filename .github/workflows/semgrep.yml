@@ -1,0 +1,19 @@
+name: Semgrep SAST
+on:
+  push:
+    branches: [main, develop, staging]
+  pull_request:
+    branches: [main, develop, staging]
+  schedule:
+    - cron: '0 12 * * 1'
+jobs:
+  semgrep:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: semgrep scan --config auto --error
