@@ -30,7 +30,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.1",
     "gulp-replace": "^1.1.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^7.0.2"
