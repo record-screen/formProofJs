@@ -3,12 +3,20 @@
   "version": "1.2.9",
   "description": "Script for record your screen",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "buildStaging": "gulp buildStaging",
-    "buildDevelop": "gulp buildDevelop",
-    "buildProduction": "gulp buildProduction",
-    "push-changes": "git push"
+    "buildStaging": "gulp --gulpfile gulpfile.cjs buildStaging",
+    "buildDevelop": "gulp --gulpfile gulpfile.cjs buildDevelop",
+    "buildProduction": "gulp --gulpfile gulpfile.cjs buildProduction",
+    "watch": "gulp --gulpfile gulpfile.cjs watch",
+    "push-changes": "git push",
+    "upload:staging": "node --env-file=.env scripts/uploadScript.js staging",
+    "upload:develop": "node --env-file=.env scripts/uploadScript.js develop",
+    "upload:production": "node --env-file=.env scripts/uploadScript.js production",
+    "deploy:staging": "npm run buildStaging && node --env-file=.env scripts/uploadScript.js staging --activate",
+    "deploy:develop": "npm run buildDevelop && node --env-file=.env scripts/uploadScript.js develop --activate",
+    "deploy:production": "npm run buildProduction && node --env-file=.env scripts/uploadScript.js production --activate"
   },
   "repository": {
     "type": "git",
@@ -31,6 +39,7 @@
   },
   "devDependencies": {
     "gulp": "^5.0.1",
+    "convex": "^1.17.0",
     "gulp-replace": "^1.1.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^7.0.2"

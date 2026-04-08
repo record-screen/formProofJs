@@ -49,3 +49,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload to Convex
+        run: node scripts/uploadScript.js develop --activate
+        env:
+          PUBLIC_CONVEX_URL: ${{ secrets.PUBLIC_CONVEX_URL_DEVELOP }}
