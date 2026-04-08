@@ -28,27 +28,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build for Production
-        run: npm run buildProduction
-
-      - name: Configure Git
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-      - name: Commit and Push changes
-        run: |
-          git add dist/
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            VERSION=$(node -p "require('./package.json').version")
-            git commit -m "🚀 Auto-deploy: Build production v${VERSION} [skip ci]"
-            git push origin main
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload to Convex
         run: node scripts/uploadScript.js production --activate
         env:
